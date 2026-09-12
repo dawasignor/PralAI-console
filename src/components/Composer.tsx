@@ -1,19 +1,38 @@
 /**
- * The chat input.
+ * The chat input and the two run settings that sit under it.
  *
  * Enter sends, Shift+Enter makes a new line. Disabled while a run is in
  * flight, so a demo cannot fire two overlapping orchestrations.
+ *
+ * The settings row carries the persona picker on the left and the
+ * verified-sources toggle in the middle. Both are sent with every turn rather
+ * than being applied once, so switching mid-conversation takes effect on the
+ * next message and nothing is retroactive.
  */
 
 import { useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
+import type { PersonaId } from "../api/types";
+import { PersonaPicker } from "./PersonaPicker";
+
 interface Props {
   disabled: boolean;
   onSend: (text: string) => void;
+  persona: PersonaId;
+  onPersonaChange: (persona: PersonaId) => void;
+  verifiedSourcesOnly: boolean;
+  onVerifiedChange: (value: boolean) => void;
 }
 
-export function Composer({ disabled, onSend }: Props) {
+export function Composer({
+  disabled,
+  onSend,
+  persona,
+  onPersonaChange,
+  verifiedSourcesOnly,
+  onVerifiedChange,
+}: Props) {
   const [draft, setDraft] = useState("");
 
   function submit(event?: FormEvent) {
@@ -42,13 +61,38 @@ export function Composer({ disabled, onSend }: Props) {
         onKeyDown={onKeyDown}
         aria-label="Message Argos"
       />
-      <button
-        className="composer__send"
-        type="submit"
-        disabled={disabled || !draft.trim()}
-      >
-        Send
-      </button>
+
+      <div className="composer__bar">
+        <PersonaPicker
+          persona={persona}
+          onChange={onPersonaChange}
+          disabled={disabled}
+        />
+
+        {/* A switch, not a checkbox: it changes what Argos is allowed to use. */}
+        <button
+          type="button"
+          className={`switch ${verifiedSourcesOnly ? "switch--on" : ""}`}
+          role="switch"
+          aria-checked={verifiedSourcesOnly}
+          disabled={disabled}
+          onClick={() => onVerifiedChange(!verifiedSourcesOnly)}
+          title="Restrict Argos to sources with documented provenance. Fewer answers, higher confidence."
+        >
+          <span className="switch__track">
+            <span className="switch__knob" />
+          </span>
+          Strictly verified, high-confidence sources only
+        </button>
+
+        <button
+          className="composer__send"
+          type="submit"
+          disabled={disabled || !draft.trim()}
+        >
+          Send
+        </button>
+      </div>
     </form>
   );
 }

@@ -16,8 +16,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { executeNode } from "../api/client";
-import type { AgentSlug, LogEvent, WorkflowId } from "../api/types";
+import type { AgentSlug, LogEvent, PersonaId, WorkflowId } from "../api/types";
 import { newSessionId } from "../lib/format";
+import { DEFAULT_PERSONA, personaInfo } from "../lib/personas";
 
 export interface ChatMessage {
   id: string;
@@ -46,6 +47,11 @@ export function useSession() {
   const [activeAgent, setActiveAgent] = useState<AgentSlug | null>(null);
   const [workflowsRun, setWorkflowsRun] = useState<WorkflowId[]>([]);
 
+  // Run settings. Sent with every turn rather than applied once, so a change
+  // takes effect on the next message and never rewrites what came before.
+  const [persona, setPersona] = useState<PersonaId>(DEFAULT_PERSONA);
+  const [verifiedSourcesOnly, setVerifiedSourcesOnly] = useState(false);
+
   // Replay timers, kept so an unmount mid-run does not leave them firing.
   const timers = useRef<number[]>([]);
   // A ref rather than the state flag, because send() reads it inside a closure.
@@ -54,6 +60,49 @@ export function useSession() {
   useEffect(() => {
     return () => timers.current.forEach((t) => window.clearTimeout(t));
   }, []);
+
+  /**
+   * Append a log line that the console itself produced, rather than Argos.
+   * Changing a setting is part of the session's proceedings, so it is recorded
+   * in the same place as everything else.
+   */
+  const note = useCallback((message: string, detail?: string) => {
+    setEvents((prev) => [
+      ...prev,
+      {
+        id: `note-${Date.now()}`,
+        ts: new Date().toISOString(),
+        level: "info",
+        agent: "argos",
+        message,
+        detail,
+      },
+    ]);
+  }, []);
+
+  const choosePersona = useCallback(
+    (next: PersonaId) => {
+      setPersona(next);
+      note(
+        `Persona switched to ${personaInfo(next).name}.`,
+        "affects tone and depth only; findings are unchanged",
+      );
+    },
+    [note],
+  );
+
+  const chooseVerifiedOnly = useCallback(
+    (next: boolean) => {
+      setVerifiedSourcesOnly(next);
+      note(
+        next
+          ? "Verified sources only: on. Argos will use products with documented provenance and skip the rest."
+          : "Verified sources only: off. Lower-confidence sources may be used.",
+        `verifiedSourcesOnly=${next}`,
+      );
+    },
+    [note],
+  );
 
   const send = useCallback(async (task: string) => {
     const text = task.trim();
@@ -70,6 +119,8 @@ export function useSession() {
       node: "argos",
       sessionId: sessionId.current,
       input: { task: text },
+      persona,
+      verifiedSourcesOnly,
     });
 
     // Replay: each event waits its own delay on top of the previous one.
@@ -101,7 +152,7 @@ export function useSession() {
       busy.current = false;
     }, elapsed + 250);
     timers.current.push(finish);
-  }, []);
+  }, [persona, verifiedSourcesOnly]);
 
   return {
     sessionId: sessionId.current,
@@ -110,6 +161,10 @@ export function useSession() {
     isRunning,
     activeAgent,
     workflowsRun,
+    persona,
+    setPersona: choosePersona,
+    verifiedSourcesOnly,
+    setVerifiedSourcesOnly: chooseVerifiedOnly,
     send,
   };
 }
