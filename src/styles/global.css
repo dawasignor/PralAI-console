@@ -84,7 +84,9 @@ button {
 
 .shell__side {
   display: grid;
-  grid-template-rows: minmax(160px, 34%) minmax(0, 1fr);
+  /* Enough height for five agents and four workflows without scrolling; the
+     log keeps the rest and stays the taller of the two. */
+  grid-template-rows: minmax(220px, 44%) minmax(0, 1fr);
   gap: var(--gap);
   min-height: 0;
 }
