@@ -71,16 +71,29 @@ effect on the next message and never rewrites what came before.
 `persona` - which voice the agents answer in. Three options, chosen from the
 picker at the bottom of the chat:
 
-| Persona | Voice |
-|---|---|
-| `ck_bot` | Plain and neutral. Explains what was done, in ordinary language. The default. |
-| `chanakya` | Strategic and terse. Leads with the decision and the risk, for a planner rather than a scientist. |
-| `norwood` | The EO specialist. Sensor terms, thresholds, and the caveats an EO reader expects. |
+| Persona | Register | Voice |
+|---|---|---|
+| `ck_bot` | plain | **Citizen Knowledge bot** - for the general public. ELI10 tone written to ASD-STE100 Simplified Technical English: short sentences, one idea each, active voice, common words. The default. |
+| `chanakya` | technical | Strategic and terse. Leads with the decision and the risk, for a planner rather than a scientist. |
+| `norwood` | technical | The Earth-observation specialist. Sensors, bands, thresholds, and the caveats an EO reader expects. |
 
-A persona changes **voice and depth only**. It must never change which
+Two rules hold across all three:
+
+**A persona changes voice and depth only.** It must never change which
 workflows run or what the numbers say - two personas asked the same question
-have to agree on the facts. The copy lives in
-[`src/lib/personas.ts`](src/lib/personas.ts).
+have to agree on the facts. Basic language is not less information: CK bot
+gets its own plain-English text for each result (`plainReply` on the
+scenario), saying the same thing in smaller words. Nothing important is
+dropped to make a reply simpler.
+
+**The technical personas explain their jargon.** Every term and abbreviation
+is defined the first time it appears in a session, and never again. The terms
+live in [`src/lib/glossary.ts`](src/lib/glossary.ts); what has already been
+explained travels on the request as `glossarySeen`, and the reply names what
+it just defined in `glossaryAdded`. CK bot never uses the table, because its
+text is not supposed to contain jargon in the first place.
+
+The persona copy lives in [`src/lib/personas.ts`](src/lib/personas.ts).
 
 `verifiedSourcesOnly` - the toggle beside the picker. On, Argos is restricted
 to products with documented provenance and names what it dropped; off, it says
@@ -158,7 +171,8 @@ src/styles/global.css               tokens, layout, one block per panel
 | `execute_node` | Recognises intent by keyword and replays a scripted run |
 | Agent replies | Written by hand; numbers are illustrative and marked as such |
 | Navigation panel | Lists nodes and workflows, highlights the active one; not interactive |
-| Personas | The switch is real and reaches the API; the stub frames the reply rather than regenerating it |
+| Personas | The switch is real and reaches the API; the two registers are written by hand rather than generated |
+| Jargon glossary | Real first-use-only behaviour, over a fixed term table |
 | Verified sources only | Real flag on the request; the stub names kept and dropped sources from a fixed list |
 | Streaming | Events arrive in one batch and are replayed on timers |
 
