@@ -58,11 +58,32 @@ export interface LogEvent {
   delayMs?: number;
 }
 
+/**
+ * The three personas. Picking one changes the tone, the language and how much
+ * the agents volunteer -- it does NOT change which workflows run or what the
+ * data says. The same run under two personas must not contradict itself.
+ *
+ * The persona copy lives in src/lib/personas.ts; this is only the identifier
+ * that travels on the wire.
+ */
+export type PersonaId = "ck_bot" | "chanakya" | "norwood";
+
 /** What the front end sends. */
 export interface ExecuteNodeRequest {
   node: AgentSlug;            // entry node -- always "argos" in v1
   sessionId: string;
   input: { task: string };    // the user's message, verbatim
+  /** Which voice the agents answer in. Chosen in the chat, sent every turn. */
+  persona: PersonaId;
+  /**
+   * Restrict Argos to sources it can vouch for -- official agency data,
+   * peer-reviewed products, documented provenance -- and drop the rest.
+   *
+   * The honest consequence is fewer answers, not better-looking ones: with
+   * this on, a run that has only unverified sources should fail rather than
+   * quietly use them.
+   */
+  verifiedSourcesOnly: boolean;
   context?: Record<string, unknown>;  // AOI, event window, anything pinned later
 }
 

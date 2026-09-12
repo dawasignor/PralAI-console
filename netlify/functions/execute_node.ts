@@ -18,6 +18,8 @@ import type {
   LogEvent,
   WorkflowId,
 } from "../../src/api/types";
+// Runtime import, not a type: the persona copy is written once, in src/lib.
+import { personaInfo } from "../../src/lib/personas";
 
 /** An event without the bookkeeping fields -- those are filled in by script(). */
 type Step = Omit<LogEvent, "id" | "ts">;
@@ -32,6 +34,13 @@ interface Scenario {
   status: ExecuteNodeResponse["status"];
   workflowsRun: WorkflowId[];
   route: AgentSlug;
+  /** Sources with documented provenance. Always used. */
+  sources: string[];
+  /**
+   * Sources that are dropped when `verifiedSourcesOnly` is on. Naming them
+   * keeps the toggle honest: the user can see what the strict setting costs.
+   */
+  strictDrops: string[];
 }
 
 // --- The scenarios ---------------------------------------------------------
@@ -45,6 +54,8 @@ const SCENARIOS: Scenario[] = [
     match: /weather|rain|rainfall|precipitation|cloud|soil moisture|open.?meteo/i,
     route: "monty",
     workflowsRun: ["fetch_weather_data"],
+    sources: ["Open-Meteo Archive (ECMWF reanalysis)", "ERA5-Land (Copernicus)"],
+    strictDrops: ["crowd-reported rainfall bulletins"],
     status: "ok",
     steps: [
       {
@@ -104,6 +115,8 @@ const SCENARIOS: Scenario[] = [
     match: /lulc|land ?cover|sentinel|ndvi|ndbi|ndwi|mndwi|scene|imagery|optical/i,
     route: "norwood",
     workflowsRun: ["fetch_lulc_data"],
+    sources: ["Sentinel-2 L2A (ESA, via Earth Search)"],
+    strictDrops: ["MODIS composite gap-fill"],
     status: "error",
     steps: [
       {
@@ -173,6 +186,8 @@ const SCENARIOS: Scenario[] = [
     match: /terrain|elevation|slope|dem|topograph/i,
     route: "monty",
     workflowsRun: ["fetch_terrain_data"],
+    sources: ["Copernicus DEM GLO-30 (ESA)"],
+    strictDrops: ["community-contributed elevation traces"],
     status: "ok",
     steps: [
       {
@@ -209,6 +224,8 @@ const SCENARIOS: Scenario[] = [
     match: /permanent water|water body|jrc|surface water|baseline water/i,
     route: "monty",
     workflowsRun: ["fetch_permanent_water"],
+    sources: ["JRC Global Surface Water (European Commission JRC)"],
+    strictDrops: ["OpenStreetMap water polygons"],
     status: "ok",
     steps: [
       {
@@ -248,6 +265,8 @@ const FALLBACK: Omit<Scenario, "match"> = {
   id: "fallback",
   route: "argos",
   workflowsRun: [],
+  sources: [],
+  strictDrops: [],
   status: "ok",
   steps: [
     {
@@ -276,6 +295,82 @@ function script(steps: Step[], sessionId: string): LogEvent[] {
   }));
 }
 
+/**
+ * What the source setting adds to the log, before the run proper.
+ *
+ * On: name the sources that survive and the ones dropped, so the cost of the
+ * setting is visible. Off: say so once, rather than leaving the reader to
+ * assume everything was vetted.
+ */
+function sourceSteps(scenario: Omit<Scenario, "match">, strict: boolean): Step[] {
+  if (scenario.sources.length === 0) return [];
+
+  if (!strict) {
+    return [
+      {
+        level: "info",
+        agent: "argos",
+        message:
+          "Verified-sources-only is off, so lower-confidence sources may be " +
+          "used alongside the primary ones.",
+        detail: `may include: ${scenario.strictDrops.join(", ")}`,
+        delayMs: 300,
+      },
+    ];
+  }
+
+  const steps: Step[] = [
+    {
+      level: "info",
+      agent: "argos",
+      message:
+        "Verified sources only: restricting this run to products with " +
+        "documented provenance.",
+      detail: `keeping: ${scenario.sources.join(", ")}`,
+      delayMs: 300,
+    },
+  ];
+
+  if (scenario.strictDrops.length > 0) {
+    steps.push({
+      level: "warn",
+      agent: "argos",
+      message: `Dropped ${scenario.strictDrops.length} source that could not be vouched for.`,
+      detail: `dropped: ${scenario.strictDrops.join(", ")}`,
+      delayMs: 400,
+    });
+  }
+
+  return steps;
+}
+
+/**
+ * Wrap a reply in the chosen persona's voice.
+ *
+ * The scenario's own text is never rewritten -- only framed. Two personas
+ * asked the same question therefore agree on every fact, which is the rule
+ * that makes the switch safe to demo.
+ *
+ * TODO(backend): the real system should carry the persona into the agent
+ * prompts instead, so the voice is generated rather than bolted on.
+ */
+function composeReply(
+  base: string,
+  personaId: ExecuteNodeRequest["persona"],
+  strict: boolean,
+  sources: string[],
+): string {
+  const persona = personaInfo(personaId ?? "ck_bot");
+  const parts = [persona.lead, base];
+
+  if (strict && sources.length > 0) {
+    parts.push(`_Verified sources only - ${sources.join("; ")}._`);
+  }
+  if (persona.close) parts.push(`_${persona.close}_`);
+
+  return parts.join("\n\n");
+}
+
 export default async (req: Request): Promise<Response> => {
   if (req.method !== "POST") {
     return new Response("execute_node accepts POST only", { status: 405 });
@@ -283,16 +378,21 @@ export default async (req: Request): Promise<Response> => {
 
   const body = (await req.json()) as ExecuteNodeRequest;
   const task = body.input?.task ?? "";
+  const strict = body.verifiedSourcesOnly === true;
 
   const scenario =
     SCENARIOS.find((candidate) => candidate.match.test(task)) ?? FALLBACK;
+
+  // Source bookkeeping first, then the run itself - the same order the real
+  // orchestrator would use, since the setting decides what it may call.
+  const steps = [...sourceSteps(scenario, strict), ...scenario.steps];
 
   const response: ExecuteNodeResponse = {
     sessionId: body.sessionId,
     node: body.node ?? "argos",
     status: scenario.status,
-    reply: scenario.reply,
-    events: script(scenario.steps, body.sessionId),
+    reply: composeReply(scenario.reply, body.persona, strict, scenario.sources),
+    events: script(steps, body.sessionId),
     state: {
       route: scenario.route,
       steps: scenario.workflowsRun.length,
