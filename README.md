@@ -1,0 +1,139 @@
+# Argos Console
+
+A front end for the five-agent flood-analysis framework in
+`E:\Claude code\langgraph-agents`. It exists to **showcase the research** - to
+give a reader one screen where they can ask a question, watch the orchestration
+happen, and see where it succeeded or failed.
+
+It is not the system. The system is the Python repo; this is a window onto it.
+
+**V1 is stubbed.** No LangGraph runs behind it yet. The API contract is real,
+the orchestration replayed in the log is a faithful script of what the agents
+actually do, and swapping the stub for the backend is a one-file change.
+
+---
+
+## The screen
+
+```
++-------------------------------+--------------------+
+|                               |  Nodes/workflows   |   <- where the run is
+|   Agent chat            70%   +--------------------+
+|                               |  Session log       |   <- what it is doing
++-------------------------------+--------------------+
+```
+
+1. **Agent chat** (70% of the width) - a normal scrolling chatbot. Everything
+   typed here goes to Argos through `execute_node`.
+2. **Navigation panel** (top right) - the five agents and four workflows, with
+   whatever is active highlighted. Read-only in v1; see [TODO.md](TODO.md).
+3. **Session log** (bottom right) - every hop, API call and failure in plain
+   English, tagged with the workflow it belongs to.
+
+---
+
+## One API: `execute_node`
+
+There is exactly one endpoint. Every user message, whatever it is about, goes
+through it:
+
+```
+POST /api/execute_node
+
+{
+  "node": "argos",
+  "sessionId": "s-m1k2j3",
+  "input": { "task": "rainfall over Shillong during the June 2023 surge" }
+}
+```
+
+```
+{
+  "sessionId": "s-m1k2j3",
+  "node": "argos",
+  "status": "ok",
+  "reply": "**Weather retrieved for the event window.** ...",
+  "events": [ /* LogEvent[] - what the session log renders */ ],
+  "state": { "route": "monty", "steps": 1, "workflowsRun": ["fetch_weather_data"] }
+}
+```
+
+The shapes live in [`src/api/types.ts`](src/api/types.ts) and are imported by
+both the front end and the function, so the two cannot drift apart.
+
+### The session-log format
+
+One event per line. `message` is plain English and must stand alone; `detail`
+carries the technical remainder.
+
+```
+12:04:31  MONTY - fetch_weather_data
+Hitting Open-Meteo to get cloud cover and rainfall for the event window.
+archive-api.open-meteo.com | hourly + daily | timezone=local
+```
+
+`level` (`info` / `ok` / `warn` / `error`) colours the rail on the left. The
+format is **provisional** - it mirrors `core/logbook.py` in the agent repo but
+has not been agreed against it yet. See [TODO.md](TODO.md).
+
+---
+
+## Running it
+
+```bash
+npm install
+npm run dev
+```
+
+`npm run dev` serves the front end **and** the `execute_node` function - a small
+Vite plugin in `vite.config.ts` mounts the function on `/api/*` locally, so the
+Netlify CLI is not needed. `netlify dev` also works if you prefer it.
+
+```bash
+npm run build      # typecheck, then production bundle into dist/
+npm run typecheck  # types only
+```
+
+---
+
+## Deploying to Netlify
+
+`netlify.toml` holds everything: build command, publish directory, functions
+directory, the `/api/*` rewrite, and the SPA fallback. Connect the repo and
+Netlify needs no further configuration.
+
+To point the console at a real backend instead of the bundled stub, set
+`VITE_API_BASE` in the Netlify UI (for example
+`https://argos.example.org/api`). Nothing else changes.
+
+---
+
+## Layout of the repo
+
+```
+netlify/functions/execute_node.ts   the one API - stubbed Argos
+src/api/types.ts                    the contract, shared by both sides
+src/api/client.ts                   the only place that calls fetch()
+src/hooks/useSession.ts             session state: chat, log, replay timing
+src/components/ChatPanel.tsx        section 1
+src/components/NavigatorPanel.tsx   section 2  (stub)
+src/components/SessionLog.tsx       section 3
+src/lib/framework.ts                the agent and workflow registry
+src/styles/global.css               tokens, layout, one block per panel
+```
+
+---
+
+## What is stubbed
+
+| Piece | State |
+|---|---|
+| `execute_node` | Recognises intent by keyword and replays a scripted run |
+| Agent replies | Written by hand; numbers are illustrative and marked as such |
+| Navigation panel | Lists nodes and workflows, highlights the active one; not interactive |
+| Streaming | Events arrive in one batch and are replayed on timers |
+
+One stubbed run **fails on purpose**: asking for land cover reports that no
+Sentinel-2 scene clears the 0.9 valid-pixel threshold. That is the real
+behaviour of the pipeline over monsoon terrain, and the console shows it rather
+than a tidier fiction.
