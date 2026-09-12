@@ -4,12 +4,19 @@
  * A persona changes voice and depth only. It must never change which workflows
  * run, which sources are used, or what the numbers say - two personas asked the
  * same question have to agree on the facts and differ only in how they put
- * them. That rule is why `voice` below rewrites the framing around a reply
- * rather than the reply itself.
+ * them. Nothing important is dropped to make a reply simpler; a simpler reply
+ * says the same thing in smaller words.
  *
- * TODO(user): confirm the CK bot definition. It is written here as the plain
- * default voice; if CK means something specific in the thesis, this copy and
- * its lead-in line need replacing.
+ * Two styles:
+ *
+ *   plain      CK bot - Citizen Knowledge bot, for the general public. ELI10
+ *              tone written to ASD-STE100 Simplified Technical English: short
+ *              sentences, one idea each, common words, active voice, no
+ *              abbreviation the reader has to look up.
+ *
+ *   technical  Chanakya and Agent Norwood. Free to use the real terms, but
+ *              every term and abbreviation is explained the first time it
+ *              appears in the session - see lib/glossary.ts.
  */
 
 import type { PersonaId } from "../api/types";
@@ -21,6 +28,10 @@ export interface Persona {
   tagline: string;
   /** What actually changes when it is selected - shown in the picker. */
   behaviour: string;
+  /** Which register the reply is written in. */
+  style: "plain" | "technical";
+  /** Whether first-use jargon gets a definition appended. */
+  explainsJargon: boolean;
   /** Stub-only: the line the agents open with in this voice. */
   lead: string;
   /** Stub-only: optional closing line. */
@@ -31,11 +42,14 @@ export const PERSONAS: Persona[] = [
   {
     id: "ck_bot",
     name: "CK bot",
-    tagline: "Plain and neutral",
+    tagline: "Citizen Knowledge - for the public",
     behaviour:
-      "Explains what was done and what it means, in ordinary language. No " +
-      "jargon unless the jargon is the point. The default.",
-    lead: "Here is what came back.",
+      "Explains the result the way you would to a ten-year-old, in Simplified " +
+      "Technical English: short sentences, common words, one idea at a time. " +
+      "Basic language, but the important message is never left out.",
+    style: "plain",
+    explainsJargon: false,
+    lead: "Here is the answer in simple words.",
   },
   {
     id: "chanakya",
@@ -43,8 +57,10 @@ export const PERSONAS: Persona[] = [
     tagline: "Strategic and terse",
     behaviour:
       "Answers a planner, not a scientist. Leads with the decision and the " +
-      "risk, keeps the method out of the way, and says plainly when the " +
-      "evidence will not carry a decision.",
+      "risk, and says plainly when the evidence will not carry a decision. " +
+      "Technical, and explains each term the first time it appears.",
+    style: "technical",
+    explainsJargon: true,
     lead: "The short of it:",
     close: "Act on what is certain; hold what is not.",
   },
@@ -54,7 +70,10 @@ export const PERSONAS: Persona[] = [
     tagline: "Earth-observation specialist",
     behaviour:
       "Answers in sensor terms - platforms, bands, thresholds, revisit - and " +
-      "states the caveats an EO reader would expect to see.",
+      "states the caveats an EO reader expects. Explains each term and " +
+      "abbreviation the first time it appears.",
+    style: "technical",
+    explainsJargon: true,
     lead: "Reading this as an EO problem:",
   },
 ];
