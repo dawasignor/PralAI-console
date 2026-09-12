@@ -84,6 +84,15 @@ export interface ExecuteNodeRequest {
    * quietly use them.
    */
   verifiedSourcesOnly: boolean;
+  /**
+   * Terms already explained in this session.
+   *
+   * The technical personas define a term the first time it appears and never
+   * again, which needs memory of what has been said. The console keeps that
+   * list because the function is stateless; the real backend can keep it in
+   * the graph state instead and ignore this field.
+   */
+  glossarySeen?: string[];
   context?: Record<string, unknown>;  // AOI, event window, anything pinned later
 }
 
@@ -94,6 +103,8 @@ export interface ExecuteNodeResponse {
   status: "ok" | "error" | "partial";
   reply: string;              // the assistant's message for the chat pane
   events: LogEvent[];         // orchestration proceedings for the session log
+  /** Terms explained in this reply, for the caller to add to glossarySeen. */
+  glossaryAdded?: string[];
   /** A thin echo of the graph state, for the navigation panel. */
   state?: {
     route?: AgentSlug;        // last hop Argos chose
