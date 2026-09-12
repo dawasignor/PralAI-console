@@ -1,0 +1,422 @@
+/* ---------------------------------------------------------------------------
+   Argos Console - global styles.
+
+   One stylesheet, organised top to bottom as: tokens, reset, layout shell,
+   then one block per panel. Panels never set their own colours directly; they
+   use the tokens below so the whole console stays one system.
+   --------------------------------------------------------------------------- */
+
+/* --- Tokens --------------------------------------------------------------- */
+
+:root {
+  /* Surfaces, darkest to lightest. */
+  --bg: #0d1117;
+  --panel: #151b23;
+  --panel-raised: #1c232d;
+  --line: #262e3a;
+
+  /* Text. */
+  --text: #e6edf3;
+  --text-dim: #9aa7b4;
+  --text-faint: #6b7887;
+
+  /* Status. Used by log levels and agent badges alike. */
+  --accent: #4c9aff;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --error: #f85149;
+
+  /* One agent colour each, so a glance at the log tells you who acted. */
+  --argos: #4c9aff;
+  --norwood: #a371f7;
+  --monty: #3fb950;
+  --entro: #d29922;
+  --citadel: #ff7b72;
+
+  --radius: 10px;
+  --gap: 12px;
+  --font: "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+}
+
+/* --- Reset ---------------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* --- Layout shell ---------------------------------------------------------
+   70 / 30 split. The right column stacks the navigation panel over the session
+   log. `minmax(0, ...)` everywhere is what lets the inner panes scroll instead
+   of stretching the page.
+   -------------------------------------------------------------------------- */
+
+.shell {
+  display: grid;
+  grid-template-columns: 70fr 30fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--gap);
+  height: 100dvh;
+  padding: var(--gap);
+}
+
+.shell__side {
+  display: grid;
+  grid-template-rows: minmax(160px, 34%) minmax(0, 1fr);
+  gap: var(--gap);
+  min-height: 0;
+}
+
+/* --- Panel chrome (shared by all three panels) ---------------------------- */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-raised);
+}
+
+.panel__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.panel__note {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* The scrolling region inside a panel. Always paired with .panel. */
+.panel__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+/* --- Chat ----------------------------------------------------------------- */
+
+.chat__stream {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 78%;
+}
+
+.msg--user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.msg--agent {
+  align-self: flex-start;
+}
+
+.msg__who {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.msg__body {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.msg--user .msg__body {
+  background: #1d3557;
+  border-color: #2b4b76;
+}
+
+.msg--error .msg__body {
+  border-color: var(--error);
+}
+
+.msg__body strong {
+  color: #fff;
+}
+
+.msg__body em {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* The "Argos is working" line, shown while a run is in flight. */
+.chat__working {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.chat__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* --- Composer ------------------------------------------------------------- */
+
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--panel-raised);
+}
+
+.composer__input {
+  flex: 1;
+  resize: none;
+  max-height: 140px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.composer__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.composer__send {
+  align-self: flex-end;
+  padding: 10px 18px;
+  background: var(--accent);
+  color: #07121f;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+}
+
+.composer__send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- Navigation panel ----------------------------------------------------- */
+
+.nav__group + .nav__group {
+  margin-top: 14px;
+}
+
+.nav__label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+
+.nav__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.nav__row:hover {
+  background: var(--panel-raised);
+  border-color: var(--line);
+}
+
+.nav__row--active {
+  background: var(--panel-raised);
+  border-color: var(--accent);
+}
+
+.nav__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.nav__name {
+  flex: 1;
+  font-size: 12px;
+}
+
+.nav__role {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.nav__state {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+/* Yellow TODO strip - a visible reminder that this panel is not finished. */
+.todo {
+  margin-top: 14px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--warn);
+  background: rgba(210, 153, 34, 0.08);
+  border: 1px dashed rgba(210, 153, 34, 0.4);
+  border-radius: 6px;
+}
+
+/* --- Session log ---------------------------------------------------------- */
+
+.log__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.log__line {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.log__rail {
+  width: 2px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.log__line--ok .log__rail {
+  background: var(--ok);
+}
+.log__line--warn .log__rail {
+  background: var(--warn);
+}
+.log__line--error .log__rail {
+  background: var(--error);
+}
+.log__line--info .log__rail {
+  background: var(--accent);
+}
+
+.log__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.log__agent {
+  font-weight: 600;
+}
+
+.log__workflow {
+  color: var(--text-dim);
+}
+
+.log__message {
+  color: var(--text);
+}
+
+.log__detail {
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+
+.log__empty {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* --- Narrow screens -------------------------------------------------------
+   Below 1024px the three panels stack and the page scrolls as a whole. The
+   console is built for a desktop demo; this just keeps it usable elsewhere.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 70vh auto;
+    height: auto;
+  }
+
+  .shell__side {
+    grid-template-rows: auto auto;
+  }
+
+  .panel__scroll {
+    max-height: 50vh;
+  }
+}
