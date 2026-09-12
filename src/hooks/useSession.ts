@@ -56,6 +56,13 @@ export function useSession() {
   const timers = useRef<number[]>([]);
   // A ref rather than the state flag, because send() reads it inside a closure.
   const busy = useRef(false);
+  /**
+   * Jargon already explained this session. The technical personas define a term
+   * on first use only, and the function is stateless, so the memory lives here
+   * and travels on each request. Switching persona does not clear it: a term
+   * explained once has been read once.
+   */
+  const glossarySeen = useRef<string[]>([]);
 
   useEffect(() => {
     return () => timers.current.forEach((t) => window.clearTimeout(t));
@@ -121,7 +128,15 @@ export function useSession() {
       input: { task: text },
       persona,
       verifiedSourcesOnly,
+      glossarySeen: glossarySeen.current,
     });
+
+    if (response.glossaryAdded?.length) {
+      glossarySeen.current = [
+        ...glossarySeen.current,
+        ...response.glossaryAdded,
+      ];
+    }
 
     // Replay: each event waits its own delay on top of the previous one.
     let elapsed = 0;

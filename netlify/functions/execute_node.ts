@@ -20,6 +20,7 @@ import type {
 } from "../../src/api/types";
 // Runtime import, not a type: the persona copy is written once, in src/lib.
 import { personaInfo } from "../../src/lib/personas";
+import { newTerms } from "../../src/lib/glossary";
 
 /** An event without the bookkeeping fields -- those are filled in by script(). */
 type Step = Omit<LogEvent, "id" | "ts">;
@@ -30,7 +31,14 @@ interface Scenario {
   /** Any of these words in the user's message selects this scenario. */
   match: RegExp;
   steps: Step[];
+  /** Technical register - Chanakya and Agent Norwood. */
   reply: string;
+  /**
+   * Plain register - CK bot. Written to ASD-STE100: short sentences, one idea
+   * each, active voice, common words, no unexplained abbreviation. It says the
+   * same thing as `reply`, in smaller words - never less.
+   */
+  plainReply: string;
   status: ExecuteNodeResponse["status"];
   workflowsRun: WorkflowId[];
   route: AgentSlug;
@@ -109,6 +117,14 @@ const SCENARIOS: Scenario[] = [
       "One caveat from Entro: daily totals are bucketed by UTC day, not local " +
       "day, so a night-time storm can land in the wrong bucket.\n\n" +
       "_Stubbed run - numbers are illustrative._",
+    plainReply:
+      "**We got the weather for those days.**\n\n" +
+      "We asked a weather service for the hours around the event. It gave us " +
+      "the rain, the cloud, the wind and the sunlight. It also gave us how wet " +
+      "the soil was, near the top and deeper down.\n\n" +
+      "One thing to know. We group the rain into days. We use a world clock, " +
+      "not your local clock. A storm late at night can show on the day before.\n\n" +
+      "_This is a practice run. The numbers are examples._",
   },
   {
     id: "lulc",
@@ -180,6 +196,16 @@ const SCENARIOS: Scenario[] = [
       "finding: cloud-season optical imagery cannot see this AOI, which is the " +
       "argument for radar.\n\n" +
       "_Stubbed run - numbers are illustrative._",
+    plainReply:
+      "**We could not see the ground from space.**\n\n" +
+      "This satellite takes photos. A photo cannot show the ground through " +
+      "cloud. We looked at 17 photos from the last 90 days. In every photo, " +
+      "cloud covered too much of the area.\n\n" +
+      "So we stopped. We did not lower our quality limit to get an answer. A " +
+      "bad photo gives a wrong answer. A wrong answer is worse than no answer.\n\n" +
+      "There is another way. Some satellites use radar instead of a camera. " +
+      "Radar can see through cloud. That is the next thing to try.\n\n" +
+      "_This is a practice run. The numbers are examples._",
   },
   {
     id: "terrain",
@@ -218,6 +244,14 @@ const SCENARIOS: Scenario[] = [
       "**Terrain retrieved.**\n\n" +
       "Copernicus DEM GLO-30 covered the bounding box; slope was derived from " +
       "the elevation grid.\n\n_Stubbed run - numbers are illustrative._",
+    plainReply:
+      "**We got the shape of the land.**\n\n" +
+      "We used a height map of the world. It gives the height of the ground " +
+      "about every 30 metres. From the heights, we worked out how steep the " +
+      "land is.\n\n" +
+      "Steepness matters in a flood. Water runs off steep land quickly. Water " +
+      "sits on flat land.\n\n" +
+      "_This is a practice run. The numbers are examples._",
   },
   {
     id: "water",
@@ -257,6 +291,14 @@ const SCENARIOS: Scenario[] = [
       "JRC Global Surface Water gives the permanent and seasonal extents, so a " +
       "later flood mask can be differenced against normal water rather than " +
       "reporting the river as a flood.\n\n_Stubbed run - numbers are illustrative._",
+    plainReply:
+      "**We found the water that is always there.**\n\n" +
+      "Some water stays all year, like a river or a lake. Other water comes " +
+      "only in the wet season. We used a world map of surface water to tell " +
+      "the two apart.\n\n" +
+      "This step matters. If we do not know where the river is, we can count " +
+      "the river itself as a flood. Then the flood looks bigger than it is.\n\n" +
+      "_This is a practice run. The numbers are examples._",
   },
 ];
 
@@ -284,6 +326,14 @@ const FALLBACK: Omit<Scenario, "match"> = {
     "(planning decisions).\n\nTry asking for rainfall during an event, a " +
     "land-cover read, terrain, or the permanent-water baseline.\n\n" +
     "_V1 console - responses are stubbed._",
+  plainReply:
+    "**Hello. I am the Citizen Knowledge bot.**\n\n" +
+    "I answer questions about floods. I work with a team. One member looks at " +
+    "satellite photos. One member collects the data. One member checks how " +
+    "sure we are. One member helps city planners decide.\n\n" +
+    "You can ask me about the rain, about the shape of the land, or about " +
+    "where water usually sits.\n\n" +
+    "_This is a practice run._",
 };
 
 /** Stamp ids and timestamps onto a scenario's steps. */
@@ -345,30 +395,58 @@ function sourceSteps(scenario: Omit<Scenario, "match">, strict: boolean): Step[]
 }
 
 /**
- * Wrap a reply in the chosen persona's voice.
+ * Build the reply for the chosen persona.
  *
- * The scenario's own text is never rewritten -- only framed. Two personas
- * asked the same question therefore agree on every fact, which is the rule
- * that makes the switch safe to demo.
+ * Two registers, picked by `persona.style`:
+ *
+ *   plain      CK bot gets `scenario.plainReply` -- the same findings written
+ *              in Simplified Technical English. Simpler words, never less
+ *              information, and no abbreviation the reader must look up.
+ *
+ *   technical  Chanakya and Norwood get `scenario.reply`, plus a definition
+ *              for every term appearing for the first time this session.
+ *
+ * Neither register invents or withholds a finding: the two texts must agree.
+ * That is what makes switching persona safe in front of an audience.
  *
  * TODO(backend): the real system should carry the persona into the agent
- * prompts instead, so the voice is generated rather than bolted on.
+ * prompts, so both registers are generated rather than written by hand.
  */
 function composeReply(
-  base: string,
+  scenario: Omit<Scenario, "match">,
   personaId: ExecuteNodeRequest["persona"],
   strict: boolean,
-  sources: string[],
-): string {
+  seen: string[],
+): { reply: string; glossaryAdded: string[] } {
   const persona = personaInfo(personaId ?? "ck_bot");
-  const parts = [persona.lead, base];
+  const plain = persona.style === "plain";
+  const base = plain ? scenario.plainReply : scenario.reply;
 
-  if (strict && sources.length > 0) {
-    parts.push(`_Verified sources only - ${sources.join("; ")}._`);
+  const parts = [persona.lead, base];
+  let added: string[] = [];
+
+  // Jargon is explained once per session, on first appearance. The lead line is
+  // included in the scan, since Norwood's own opener contains a term.
+  if (persona.explainsJargon) {
+    const found = newTerms(`${persona.lead}\n${base}`, seen);
+    if (found.length > 0) {
+      added = found.map((entry) => entry.term);
+      parts.push(
+        found.map((entry) => `_${entry.term}: ${entry.meaning}._`).join("\n"),
+      );
+    }
+  }
+
+  if (strict && scenario.sources.length > 0) {
+    parts.push(
+      plain
+        ? `_We used only sources that we can check: ${scenario.sources.join("; ")}._`
+        : `_Verified sources only - ${scenario.sources.join("; ")}._`,
+    );
   }
   if (persona.close) parts.push(`_${persona.close}_`);
 
-  return parts.join("\n\n");
+  return { reply: parts.join("\n\n"), glossaryAdded: added };
 }
 
 export default async (req: Request): Promise<Response> => {
@@ -387,12 +465,20 @@ export default async (req: Request): Promise<Response> => {
   // orchestrator would use, since the setting decides what it may call.
   const steps = [...sourceSteps(scenario, strict), ...scenario.steps];
 
+  const { reply, glossaryAdded } = composeReply(
+    scenario,
+    body.persona,
+    strict,
+    body.glossarySeen ?? [],
+  );
+
   const response: ExecuteNodeResponse = {
     sessionId: body.sessionId,
     node: body.node ?? "argos",
     status: scenario.status,
-    reply: composeReply(scenario.reply, body.persona, strict, scenario.sources),
+    reply,
     events: script(steps, body.sessionId),
+    glossaryAdded,
     state: {
       route: scenario.route,
       steps: scenario.workflowsRun.length,
