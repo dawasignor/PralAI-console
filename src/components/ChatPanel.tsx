@@ -8,6 +8,7 @@
 
 import { useEffect, useRef } from "react";
 
+import type { PersonaId } from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
 import { agentInfo } from "../lib/framework";
 import { miniMarkdown } from "../lib/format";
@@ -17,9 +18,22 @@ interface Props {
   messages: ChatMessage[];
   isRunning: boolean;
   onSend: (text: string) => void;
+  // Run settings live in useSession; the panel only passes them through.
+  persona: PersonaId;
+  onPersonaChange: (persona: PersonaId) => void;
+  verifiedSourcesOnly: boolean;
+  onVerifiedChange: (value: boolean) => void;
 }
 
-export function ChatPanel({ messages, isRunning, onSend }: Props) {
+export function ChatPanel({
+  messages,
+  isRunning,
+  onSend,
+  persona,
+  onPersonaChange,
+  verifiedSourcesOnly,
+  onVerifiedChange,
+}: Props) {
   const endRef = useRef<HTMLDivElement>(null);
 
   // Keep the newest message in view, the way a chat app does.
@@ -50,7 +64,14 @@ export function ChatPanel({ messages, isRunning, onSend }: Props) {
         </div>
       </div>
 
-      <Composer disabled={isRunning} onSend={onSend} />
+      <Composer
+        disabled={isRunning}
+        onSend={onSend}
+        persona={persona}
+        onPersonaChange={onPersonaChange}
+        verifiedSourcesOnly={verifiedSourcesOnly}
+        onVerifiedChange={onVerifiedChange}
+      />
     </section>
   );
 }

@@ -17,13 +17,31 @@ import { SessionLog } from "./components/SessionLog";
 import { useSession } from "./hooks/useSession";
 
 export default function App() {
-  const { messages, events, isRunning, activeAgent, workflowsRun, send } =
-    useSession();
+  const {
+    messages,
+    events,
+    isRunning,
+    activeAgent,
+    workflowsRun,
+    persona,
+    setPersona,
+    verifiedSourcesOnly,
+    setVerifiedSourcesOnly,
+    send,
+  } = useSession();
 
   return (
     <main className="shell">
       {/* 1. the chat - the only place the user types */}
-      <ChatPanel messages={messages} isRunning={isRunning} onSend={send} />
+      <ChatPanel
+        messages={messages}
+        isRunning={isRunning}
+        onSend={send}
+        persona={persona}
+        onPersonaChange={setPersona}
+        verifiedSourcesOnly={verifiedSourcesOnly}
+        onVerifiedChange={setVerifiedSourcesOnly}
+      />
 
       <div className="shell__side">
         {/* 2. where the run is in the graph */}
