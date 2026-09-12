@@ -28,6 +28,19 @@ The navigation panel is deliberately a read-only list in v1. The agreed work:
 - [ ] Add filtering by agent and by level once a real run produces enough lines
       to need it.
 
+## Personas and source filtering
+
+- [ ] Confirm what **CK bot** is. It is written as the plain, neutral default
+      voice in `src/lib/personas.ts`; if CK means something specific in the
+      thesis, that copy and its lead-in line need replacing.
+- [ ] Carry `persona` into the agent prompts in the backend, so the voice is
+      generated rather than framed around a fixed reply by the stub.
+- [ ] Decide what `verifiedSourcesOnly` actually does to a real run - which
+      source tiers exist, who assigns a tier, and whether a run with nothing
+      left is a failure or a partial.
+- [ ] Decide whether the setting should be recorded with a result, so a report
+      states the confidence regime it was produced under.
+
 ## Backend
 
 - [ ] Replace the scenario table in `netlify/functions/execute_node.ts` with a

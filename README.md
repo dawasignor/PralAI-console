@@ -43,7 +43,9 @@ POST /api/execute_node
 {
   "node": "argos",
   "sessionId": "s-m1k2j3",
-  "input": { "task": "rainfall over Shillong during the June 2023 surge" }
+  "input": { "task": "rainfall over Shillong during the June 2023 surge" },
+  "persona": "chanakya",
+  "verifiedSourcesOnly": true
 }
 ```
 
@@ -60,6 +62,31 @@ POST /api/execute_node
 
 The shapes live in [`src/api/types.ts`](src/api/types.ts) and are imported by
 both the front end and the function, so the two cannot drift apart.
+
+### The two run settings
+
+Both travel on **every** turn, not once per session, so changing one takes
+effect on the next message and never rewrites what came before.
+
+`persona` - which voice the agents answer in. Three options, chosen from the
+picker at the bottom of the chat:
+
+| Persona | Voice |
+|---|---|
+| `ck_bot` | Plain and neutral. Explains what was done, in ordinary language. The default. |
+| `chanakya` | Strategic and terse. Leads with the decision and the risk, for a planner rather than a scientist. |
+| `norwood` | The EO specialist. Sensor terms, thresholds, and the caveats an EO reader expects. |
+
+A persona changes **voice and depth only**. It must never change which
+workflows run or what the numbers say - two personas asked the same question
+have to agree on the facts. The copy lives in
+[`src/lib/personas.ts`](src/lib/personas.ts).
+
+`verifiedSourcesOnly` - the toggle beside the picker. On, Argos is restricted
+to products with documented provenance and names what it dropped; off, it says
+so once rather than letting the reader assume everything was vetted. The honest
+consequence is **fewer answers, not better-looking ones**: a run left with only
+unverified sources should fail rather than quietly use them.
 
 ### The session-log format
 
@@ -131,6 +158,8 @@ src/styles/global.css               tokens, layout, one block per panel
 | `execute_node` | Recognises intent by keyword and replays a scripted run |
 | Agent replies | Written by hand; numbers are illustrative and marked as such |
 | Navigation panel | Lists nodes and workflows, highlights the active one; not interactive |
+| Personas | The switch is real and reaches the API; the stub frames the reply rather than regenerating it |
+| Verified sources only | Real flag on the request; the stub names kept and dropped sources from a fixed list |
 | Streaming | Events arrive in one batch and are replayed on timers |
 
 One stubbed run **fails on purpose**: asking for land cover reports that no
