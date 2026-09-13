@@ -67,6 +67,7 @@ export function ChatPanel({
       <Composer
         disabled={isRunning}
         onSend={onSend}
+        messages={messages}
         persona={persona}
         onPersonaChange={onPersonaChange}
         verifiedSourcesOnly={verifiedSourcesOnly}
