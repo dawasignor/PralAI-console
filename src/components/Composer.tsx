@@ -14,11 +14,16 @@ import { useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
 import type { PersonaId } from "../api/types";
+import type { ChatMessage } from "../hooks/useSession";
+import { chatTranscript } from "../lib/transcript";
+import { CopyButton } from "./CopyButton";
 import { PersonaPicker } from "./PersonaPicker";
 
 interface Props {
   disabled: boolean;
   onSend: (text: string) => void;
+  /** The whole conversation, for the copy button. */
+  messages: ChatMessage[];
   persona: PersonaId;
   onPersonaChange: (persona: PersonaId) => void;
   verifiedSourcesOnly: boolean;
@@ -28,6 +33,7 @@ interface Props {
 export function Composer({
   disabled,
   onSend,
+  messages,
   persona,
   onPersonaChange,
   verifiedSourcesOnly,
@@ -84,6 +90,13 @@ export function Composer({
           </span>
           Strictly verified, high-confidence sources only
         </button>
+
+        <CopyButton
+          getText={() => chatTranscript(messages)}
+          label="Copy chat"
+          title="Copy every exchange in this conversation"
+          emptyTitle="No exchanges yet"
+        />
 
         <button
           className="composer__send"

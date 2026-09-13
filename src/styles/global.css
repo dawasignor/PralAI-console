@@ -127,6 +127,64 @@ button {
   color: var(--text-faint);
 }
 
+/* Right-hand side of a panel header, when it holds more than a note. */
+.panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Copy button ----------------------------------------------------------
+   Quiet until hovered: it is a utility, not a call to action, and it sits next
+   to controls that matter more.
+   -------------------------------------------------------------------------- */
+
+.copy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.copy:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+
+.copy:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.copy__icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* Success and failure are colour AND a changed label, so the state survives
+   for anyone who cannot pick the colour out. */
+.copy--copied {
+  color: var(--ok);
+  border-color: rgba(63, 185, 80, 0.5);
+}
+
+.copy--failed {
+  color: var(--error);
+  border-color: rgba(248, 81, 73, 0.5);
+}
+
+/* In a panel header the button competes with the title, so shrink it. */
+.panel__actions .copy {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
 /* The scrolling region inside a panel. Always paired with .panel. */
 .panel__scroll {
   flex: 1;

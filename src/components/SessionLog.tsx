@@ -16,6 +16,8 @@
 import { useEffect, useRef } from "react";
 
 import type { LogEvent } from "../api/types";
+import { logTranscript } from "../lib/transcript";
+import { CopyButton } from "./CopyButton";
 import { agentInfo, workflowInfo } from "../lib/framework";
 import { clock } from "../lib/format";
 
@@ -35,7 +37,15 @@ export function SessionLog({ events }: Props) {
     <section className="panel" aria-label="Session log">
       <header className="panel__head">
         <h2 className="panel__title">Session log</h2>
-        <span className="panel__note">{events.length} events</span>
+        <div className="panel__actions">
+          <span className="panel__note">{events.length} events</span>
+          <CopyButton
+            getText={() => logTranscript(events)}
+            label="Copy"
+            title="Copy the whole session log"
+            emptyTitle="No events yet"
+          />
+        </div>
       </header>
 
       <div className="panel__scroll">
