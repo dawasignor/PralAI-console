@@ -11,7 +11,7 @@ import { useEffect, useRef } from "react";
 import type { PersonaId } from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
 import { agentInfo } from "../lib/framework";
-import { miniMarkdown } from "../lib/format";
+import { renderMarkdown } from "../lib/markdown";
 import { Composer } from "./Composer";
 
 interface Props {
@@ -93,10 +93,11 @@ function Message({ message }: { message: ChatMessage }) {
         .join(" ")}
     >
       <span className="msg__who">{who}</span>
-      {/* Safe: miniMarkdown escapes the text before adding its two tags. */}
+      {/* Safe: renderMarkdown escapes every angle bracket before a single
+          rule runs, so nothing the model writes can introduce markup. */}
       <div
         className="msg__body"
-        dangerouslySetInnerHTML={{ __html: miniMarkdown(message.text) }}
+        dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
       />
     </article>
   );
