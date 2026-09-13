@@ -9,10 +9,16 @@
  *
  * Two styles:
  *
- *   plain      CK bot - Citizen Knowledge bot, for the general public. ELI10
- *              tone written to ASD-STE100 Simplified Technical English: short
- *              sentences, one idea each, common words, active voice, no
- *              abbreviation the reader has to look up.
+ *   plain      CK bot - Citizen Knowledge bot, for the general public. Two
+ *              separate dials here, and they are not the same thing:
+ *
+ *                tone      ELI10 - explain it to a ten-year-old.
+ *                language  ASD-STE100 Simplified Technical English - short
+ *                          sentences, one idea each, active voice, common
+ *                          words, no abbreviation the reader must look up.
+ *
+ *              STE is a guide to how simple the language is. It says nothing
+ *              about how the reply sounds; the tone is chosen separately.
  *
  *   technical  Chanakya and Agent Norwood. Free to use the real terms, but
  *              every term and abbreviation is explained the first time it

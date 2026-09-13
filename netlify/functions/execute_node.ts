@@ -34,9 +34,10 @@ interface Scenario {
   /** Technical register - Chanakya and Agent Norwood. */
   reply: string;
   /**
-   * Plain register - CK bot. Written to ASD-STE100: short sentences, one idea
-   * each, active voice, common words, no unexplained abbreviation. It says the
-   * same thing as `reply`, in smaller words - never less.
+   * Plain register - CK bot. ELI10 tone, with the language kept to ASD-STE100:
+   * short sentences, one idea each, active voice, common words, no unexplained
+   * abbreviation. It says the same thing as `reply`, in smaller words - never
+   * less.
    */
   plainReply: string;
   status: ExecuteNodeResponse["status"];
@@ -399,9 +400,10 @@ function sourceSteps(scenario: Omit<Scenario, "match">, strict: boolean): Step[]
  *
  * Two registers, picked by `persona.style`:
  *
- *   plain      CK bot gets `scenario.plainReply` -- the same findings written
- *              in Simplified Technical English. Simpler words, never less
- *              information, and no abbreviation the reader must look up.
+ *   plain      CK bot gets `scenario.plainReply` -- the same findings in an
+ *              ELI10 tone, worded to Simplified Technical English. Simpler
+ *              words, never less information, and no abbreviation the reader
+ *              must look up.
  *
  *   technical  Chanakya and Norwood get `scenario.reply`, plus a definition
  *              for every term appearing for the first time this session.
