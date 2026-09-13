@@ -73,7 +73,7 @@ picker at the bottom of the chat:
 
 | Persona | Register | Voice |
 |---|---|---|
-| `ck_bot` | plain | **Citizen Knowledge bot** - for the general public. ELI10 tone written to ASD-STE100 Simplified Technical English: short sentences, one idea each, active voice, common words. The default. |
+| `ck_bot` | plain | **Citizen Knowledge bot** - for the general public. Tone is ELI10; the language follows ASD-STE100 Simplified Technical English - short sentences, one idea each, active voice, common words. The two are separate: STE governs how simple the wording is, not how the reply sounds. The default. |
 | `chanakya` | technical | Strategic and terse. Leads with the decision and the risk, for a planner rather than a scientist. |
 | `norwood` | technical | The Earth-observation specialist. Sensors, bands, thresholds, and the caveats an EO reader expects. |
 

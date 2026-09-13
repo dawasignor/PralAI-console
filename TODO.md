@@ -33,13 +33,8 @@ The navigation panel is deliberately a read-only list in v1. The agreed work:
 - [ ] Carry `persona` into the agent prompts in the backend, so both registers
       are generated rather than hand-written per scenario. Every new workflow
       currently needs a `reply` and a `plainReply` written for it.
-- [ ] Check the plain replies against ASD-STE100 properly. They follow the
-      spirit of it - short sentences, active voice, common words, one idea at
-      a time - but nothing validates them against the approved word list.
 - [ ] Grow `src/lib/glossary.ts` as the vocabulary grows, and decide whether a
       term should also be explained when the user asks about it directly.
-- [ ] Decide whether the glossary should reset when a persona changes. It does
-      not today, on the grounds that a term explained once has been read once.
 - [ ] Decide what `verifiedSourcesOnly` actually does to a real run - which
       source tiers exist, who assigns a tier, and whether a run with nothing
       left is a failure or a partial.

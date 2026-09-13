@@ -59,8 +59,10 @@ export function useSession() {
   /**
    * Jargon already explained this session. The technical personas define a term
    * on first use only, and the function is stateless, so the memory lives here
-   * and travels on each request. Switching persona does not clear it: a term
-   * explained once has been read once.
+   * and travels on each request.
+   *
+   * One glossary per session, not one per persona: switching persona does not
+   * clear it, because a term explained once has been read once.
    */
   const glossarySeen = useRef<string[]>([]);
 
