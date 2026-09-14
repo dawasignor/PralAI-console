@@ -18,6 +18,7 @@ import type { ChatMessage } from "../hooks/useSession";
 import { chatTranscript } from "../lib/transcript";
 import { CopyButton } from "./CopyButton";
 import { PersonaPicker } from "./PersonaPicker";
+import { RunClock } from "./RunClock";
 
 interface Props {
   disabled: boolean;
@@ -28,6 +29,8 @@ interface Props {
   onPersonaChange: (persona: PersonaId) => void;
   verifiedSourcesOnly: boolean;
   onVerifiedChange: (value: boolean) => void;
+  /** How long the current or last run has taken, measured by the backend. */
+  elapsedMs: number;
 }
 
 export function Composer({
@@ -38,6 +41,7 @@ export function Composer({
   onPersonaChange,
   verifiedSourcesOnly,
   onVerifiedChange,
+  elapsedMs,
 }: Props) {
   const [draft, setDraft] = useState("");
 
@@ -97,6 +101,9 @@ export function Composer({
           title="Copy every exchange in this conversation"
           emptyTitle="No exchanges yet"
         />
+
+        {/* Beside Send, where someone waiting is already looking. */}
+        <RunClock isRunning={disabled} elapsedMs={elapsedMs} />
 
         <button
           className="composer__send"

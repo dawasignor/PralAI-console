@@ -24,6 +24,7 @@ export default function App() {
     activeAgent,
     workflowsRun,
     facts,
+    elapsedMs,
     persona,
     setPersona,
     verifiedSourcesOnly,
@@ -37,6 +38,7 @@ export default function App() {
       <ChatPanel
         messages={messages}
         isRunning={isRunning}
+        elapsedMs={elapsedMs}
         onSend={send}
         persona={persona}
         onPersonaChange={setPersona}

@@ -120,11 +120,60 @@ export interface SessionFacts {
   digest: string | null;
 }
 
+/**
+ * How long a run may take before the console says something about it.
+ *
+ * These are the only two numbers behind the clock, so retuning is a one-line
+ * edit. **`FAILED_AFTER_MS` is below the observed runtime of a real run** --
+ * measured on this backend: a simple question 21 s, a Citadel flow 39-64 s, a
+ * four-workflow Derna run 94 s. At 40 s the console stops waiting and calls it
+ * failed, so a run that would have answered is abandoned. That is what was
+ * asked for; raise this number if the abandoned runs turn out to be the ones
+ * worth having.
+ */
+export const SLOW_AFTER_MS = 20_000;
+export const FAILED_AFTER_MS = 40_000;
+
+/**
+ * What the backend says when asked how a run is going.
+ *
+ * A run takes tens of seconds, so `execute_node` starts it and hands back a
+ * `taskId` rather than blocking. Polling `/task/<id>` returns this until the
+ * run ends, and then returns the full ExecuteNodeResponse.
+ *
+ * The stub keeps no jobs and answers in one hop with no `taskId`, so a caller
+ * has to handle both shapes: a `reply` means done, a `taskId` means poll.
+ */
+export interface TaskProgress {
+  taskId: string;
+  sessionId?: string;
+  status: "running";
+  /** Milliseconds since the run started, measured by the backend. */
+  elapsedMs: number;
+  /** Every step taken so far. Grows; never reordered. */
+  events: LogEvent[];
+}
+
+/** A poll answers with one or the other. */
+export type TaskPoll = TaskProgress | ExecuteNodeResponse;
+
+export function isRunning(poll: TaskPoll): poll is TaskProgress {
+  return poll.status === "running";
+}
+
 /** What comes back. */
 export interface ExecuteNodeResponse {
   sessionId: string;
+  /** Present when the backend ran this in the background. Absent from the stub. */
+  taskId?: string;
+  /** How long the run took, once it is over. */
+  elapsedMs?: number;
   node: AgentSlug;
-  status: "ok" | "error" | "partial";
+  /**
+   * "unknown" means the backend is no longer tracking this run -- it restarted,
+   * or the job aged out. The caller should stop polling rather than retry.
+   */
+  status: "ok" | "error" | "partial" | "unknown";
   reply: string;              // the assistant's message for the chat pane
   events: LogEvent[];         // orchestration proceedings for the session log
   /** Terms explained in this reply, for the caller to add to glossarySeen. */

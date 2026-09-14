@@ -23,11 +23,14 @@ interface Props {
   onPersonaChange: (persona: PersonaId) => void;
   verifiedSourcesOnly: boolean;
   onVerifiedChange: (value: boolean) => void;
+  /** Passed straight through to the clock beside Send. */
+  elapsedMs: number;
 }
 
 export function ChatPanel({
   messages,
   isRunning,
+  elapsedMs,
   onSend,
   persona,
   onPersonaChange,
@@ -72,6 +75,7 @@ export function ChatPanel({
         onPersonaChange={onPersonaChange}
         verifiedSourcesOnly={verifiedSourcesOnly}
         onVerifiedChange={onVerifiedChange}
+        elapsedMs={elapsedMs}
       />
     </section>
   );
