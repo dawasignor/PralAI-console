@@ -993,3 +993,103 @@ button {
 .graph__node--dim text   { opacity: 0.22; }
 
 .graph__node:hover circle { stroke: var(--text); stroke-width: 2.5; }
+
+/* --- "Check inputs" popup ----------------------------------------------- */
+/* Opens upward out of the composer bar, the same way the persona picker does,
+   so the two popups behave alike. */
+.inputs {
+  position: relative;
+}
+
+.inputs__button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.inputs__button:hover { color: var(--text); border-color: var(--text-faint); }
+
+.inputs__panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: min(420px, 78vw);
+  max-height: 420px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-raised);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  overflow-y: auto;
+}
+
+.inputs__heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 6px;
+  color: var(--text-faint);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.inputs__heading:first-child { margin-top: 0; }
+
+.inputs__tag {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Marked, because an unmarked stub reads as a finding. */
+.inputs__tag--stub {
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+  color: var(--warn);
+}
+
+.inputs__row {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.inputs__key {
+  flex: 0 0 62px;
+  color: var(--text-dim);
+}
+
+.inputs__value {
+  flex: 1;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* Where the value came from, under it rather than beside it -- a provider name
+   is not the value and should not be mistaken for one. */
+.inputs__source {
+  display: block;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.inputs__empty {
+  margin: 2px 0 0;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
