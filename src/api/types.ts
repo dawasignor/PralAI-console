@@ -129,7 +129,7 @@ export interface SessionFacts {
  * session alone comes back inside that, so saying anything sooner would make
  * every turn look like a problem.
  *
- * 180 s is well past everything measured on this backend -- a simple question
+ * 300 s is far past everything measured on this backend -- a simple question
  * 21 s, a Citadel flow 39-64 s, a four-workflow Derna run 94 s. It is a
  * deadline for a run that has genuinely stopped, not a guess at how long work
  * takes, which is why it sits clear of the slowest real run rather than near
@@ -141,7 +141,7 @@ export interface SessionFacts {
  * furniture by the third run.
  */
 export const SLOW_AFTER_MS = 20_000;
-export const FAILED_AFTER_MS = 180_000;
+export const FAILED_AFTER_MS = 300_000;
 
 /**
  * What the backend says when asked how a run is going.
