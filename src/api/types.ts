@@ -123,16 +123,21 @@ export interface SessionFacts {
 /**
  * How long a run may take before the console says something about it.
  *
- * These are the only two numbers behind the clock, so retuning is a one-line
- * edit. **`FAILED_AFTER_MS` is below the observed runtime of a real run** --
- * measured on this backend: a simple question 21 s, a Citadel flow 39-64 s, a
- * four-workflow Derna run 94 s. At 40 s the console stops waiting and calls it
- * failed, so a run that would have answered is abandoned. That is what was
- * asked for; raise this number if the abandoned runs turn out to be the ones
- * worth having.
+ * The only two numbers behind the clock, so retuning is a one-line edit.
+ *
+ * 20 s is where a run stops being ordinary: a question answered from the
+ * session alone comes back inside that, so saying anything sooner would make
+ * every turn look like a problem.
+ *
+ * 120 s is past everything measured on this backend -- a simple question 21 s,
+ * a Citadel flow 39-64 s, a four-workflow Derna run 94 s. It is a deadline for
+ * a run that has genuinely stopped, not a guess at how long work takes, which
+ * is why it sits well clear of the slowest real run rather than near it. Past
+ * it the console stops waiting and the answer, if one ever arrives, is
+ * discarded.
  */
 export const SLOW_AFTER_MS = 20_000;
-export const FAILED_AFTER_MS = 40_000;
+export const FAILED_AFTER_MS = 120_000;
 
 /**
  * What the backend says when asked how a run is going.
