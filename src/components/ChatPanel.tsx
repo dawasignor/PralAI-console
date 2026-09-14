@@ -11,6 +11,8 @@ import { useEffect, useRef } from "react";
 import type {
   NextStep,
   PersonaId,
+  SessionFacts,
+  WorkflowId,
 } from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
 import { agentInfo } from "../lib/framework";
@@ -32,6 +34,9 @@ interface Props {
   elapsedMs: number;
   /** What Argos offered to do next, or null. */
   nextStep: NextStep | null;
+  /** Passed through to "Check inputs". */
+  facts: SessionFacts | null;
+  workflowsRun: WorkflowId[];
 }
 
 export function ChatPanel({
@@ -39,6 +44,8 @@ export function ChatPanel({
   isRunning,
   elapsedMs,
   nextStep,
+  facts,
+  workflowsRun,
   onSend,
   persona,
   onPersonaChange,
@@ -87,6 +94,8 @@ export function ChatPanel({
         onPersonaChange={onPersonaChange}
         verifiedSourcesOnly={verifiedSourcesOnly}
         onVerifiedChange={onVerifiedChange}
+        facts={facts}
+        workflowsRun={workflowsRun}
       />
     </section>
   );

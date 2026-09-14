@@ -41,6 +41,8 @@ export default function App() {
         isRunning={isRunning}
         elapsedMs={elapsedMs}
         nextStep={nextStep}
+        facts={facts}
+        workflowsRun={workflowsRun}
         onSend={send}
         persona={persona}
         onPersonaChange={setPersona}

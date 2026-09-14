@@ -13,10 +13,11 @@
 import { useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
-import type { PersonaId } from "../api/types";
+import type { PersonaId, SessionFacts, WorkflowId } from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
 import { chatTranscript } from "../lib/transcript";
 import { CopyButton } from "./CopyButton";
+import { InputsPopup } from "./InputsPopup";
 import { PersonaPicker } from "./PersonaPicker";
 
 interface Props {
@@ -28,6 +29,9 @@ interface Props {
   onPersonaChange: (persona: PersonaId) => void;
   verifiedSourcesOnly: boolean;
   onVerifiedChange: (value: boolean) => void;
+  /** For "Check inputs": what the answers were built on. */
+  facts: SessionFacts | null;
+  workflowsRun: WorkflowId[];
 }
 
 export function Composer({
@@ -38,6 +42,8 @@ export function Composer({
   onPersonaChange,
   verifiedSourcesOnly,
   onVerifiedChange,
+  facts,
+  workflowsRun,
 }: Props) {
   const [draft, setDraft] = useState("");
 
@@ -90,6 +96,13 @@ export function Composer({
           </span>
           Strictly verified, high-confidence sources only
         </button>
+
+        <InputsPopup
+          facts={facts}
+          workflowsRun={workflowsRun}
+          persona={persona}
+          verifiedSourcesOnly={verifiedSourcesOnly}
+        />
 
         <CopyButton
           getText={() => chatTranscript(messages)}
