@@ -13,6 +13,7 @@ import type { ChatMessage } from "../hooks/useSession";
 import { agentInfo } from "../lib/framework";
 import { renderMarkdown } from "../lib/markdown";
 import { Composer } from "./Composer";
+import { RunClock } from "./RunClock";
 
 interface Props {
   messages: ChatMessage[];
@@ -60,6 +61,7 @@ export function ChatPanel({
           {isRunning && (
             <div className="chat__working">
               <span className="chat__pulse" />
+              <RunClock elapsedMs={elapsedMs} />
               Argos is orchestrating...
             </div>
           )}
@@ -75,7 +77,6 @@ export function ChatPanel({
         onPersonaChange={onPersonaChange}
         verifiedSourcesOnly={verifiedSourcesOnly}
         onVerifiedChange={onVerifiedChange}
-        elapsedMs={elapsedMs}
       />
     </section>
   );

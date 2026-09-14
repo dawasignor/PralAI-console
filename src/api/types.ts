@@ -129,15 +129,19 @@ export interface SessionFacts {
  * session alone comes back inside that, so saying anything sooner would make
  * every turn look like a problem.
  *
- * 120 s is past everything measured on this backend -- a simple question 21 s,
- * a Citadel flow 39-64 s, a four-workflow Derna run 94 s. It is a deadline for
- * a run that has genuinely stopped, not a guess at how long work takes, which
- * is why it sits well clear of the slowest real run rather than near it. Past
- * it the console stops waiting and the answer, if one ever arrives, is
- * discarded.
+ * 180 s is well past everything measured on this backend -- a simple question
+ * 21 s, a Citadel flow 39-64 s, a four-workflow Derna run 94 s. It is a
+ * deadline for a run that has genuinely stopped, not a guess at how long work
+ * takes, which is why it sits clear of the slowest real run rather than near
+ * it. Past it the console stops waiting and the answer, if one ever arrives,
+ * is discarded.
+ *
+ * Neither threshold puts a sentence on screen. The clock turns amber, then
+ * red; a line of reassurance appearing at twenty seconds is read once and is
+ * furniture by the third run.
  */
 export const SLOW_AFTER_MS = 20_000;
-export const FAILED_AFTER_MS = 120_000;
+export const FAILED_AFTER_MS = 180_000;
 
 /**
  * What the backend says when asked how a run is going.

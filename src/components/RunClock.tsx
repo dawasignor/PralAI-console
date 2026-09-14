@@ -1,19 +1,20 @@
 /**
  * The clock that runs while Argos does.
  *
- * A run takes tens of seconds and used to show nothing but a disabled Send
- * button, which is indistinguishable from a console that has frozen. This says
- * how long it has been going and, past two thresholds, what that means.
+ * Sits with the working indicator, where someone waiting is already looking,
+ * and shows one thing: how long this has been going. Past the slow threshold
+ * it turns amber and past the failure one red -- the colour says "longer than
+ * usual" without a sentence saying it, because a sentence that appears at
+ * twenty seconds is read once and is furniture by the third run.
  *
- * The time comes from the backend, which measures it from the moment the work
- * actually started. Counting here would drift, and would keep counting through
- * a lost connection -- reporting progress on a run nobody is watching.
+ * The time comes from the backend, measured from when the work actually
+ * started. Counting here would drift, and would keep counting through a lost
+ * connection -- reporting progress on a run nobody is watching.
  */
 
 import { FAILED_AFTER_MS, SLOW_AFTER_MS } from "../api/types";
 
 interface Props {
-  isRunning: boolean;
   elapsedMs: number;
 }
 
@@ -23,44 +24,22 @@ function clockFace(ms: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }
 
-/**
- * What to say about the wait, if anything.
- *
- * Silence under 20 s: a normal run finishes in that time, and narrating it
- * would make every turn look like a problem.
- */
-function reassurance(ms: number): { text: string; level: string } | null {
-  if (ms >= FAILED_AFTER_MS) {
-    return { text: "It failed. Try again sometime later.", level: "error" };
-  }
-  if (ms >= SLOW_AFTER_MS) {
-    return { text: "Hang in there, heavy work being done.", level: "warn" };
-  }
-  return null;
+function tone(ms: number): string {
+  if (ms >= FAILED_AFTER_MS) return "clock--error";
+  if (ms >= SLOW_AFTER_MS) return "clock--warn";
+  return "";
 }
 
-export function RunClock({ isRunning, elapsedMs }: Props) {
-  // Once idle the clock stays put showing the last run's duration, rather than
-  // disappearing -- how long that took is worth knowing after the fact.
-  const note = isRunning ? reassurance(elapsedMs) : null;
-
+export function RunClock({ elapsedMs }: Props) {
   return (
-    <div
-      className={`clock ${isRunning ? "clock--live" : ""} ${
-        note ? `clock--${note.level}` : ""
-      }`}
-      // Announced on a timer, not per tick: a screen reader reading every
-      // second would be unusable.
-      aria-live="polite"
-      title={
-        isRunning
-          ? "Time since Argos started this run"
-          : "How long the last run took"
-      }
+    <span
+      className={`clock ${tone(elapsedMs)}`}
+      // Announced on change rather than per tick: a screen reader reading
+      // every second would be unusable, and the colour carries no meaning
+      // without the number beside it.
+      aria-label={`Running for ${clockFace(elapsedMs)}`}
     >
-      <span className="clock__dot" aria-hidden="true" />
-      <span className="clock__time">{clockFace(elapsedMs)}</span>
-      {note && <span className="clock__note">{note.text}</span>}
-    </div>
+      {clockFace(elapsedMs)}
+    </span>
   );
 }
