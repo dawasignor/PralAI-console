@@ -12,8 +12,11 @@
  *   - load the workflow list from the backend registry, see lib/framework.ts
  */
 
+import { useState } from "react";
+
 import type { AgentSlug, SessionFacts, WorkflowId } from "../api/types";
 import { AGENTS, WORKFLOWS } from "../lib/framework";
+import { FlowGraph } from "./FlowGraph";
 
 interface Props {
   activeAgent: AgentSlug | null;   // who acted most recently
@@ -27,6 +30,8 @@ function bboxText(bbox: [number, number, number, number]): string {
 }
 
 export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
+  const [graphOpen, setGraphOpen] = useState(false);
+
   return (
     <section className="panel" aria-label="Nodes and workflows">
       <header className="panel__head">
@@ -87,12 +92,17 @@ export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
               <div
                 key={agent.slug}
                 className={`nav__row ${isActive ? "nav__row--active" : ""}`}
+                // The dot carries the state, so it has to carry it for a
+                // reader who cannot see colour or motion either.
+                title={isActive ? `${agent.name} is working` : `${agent.name} is idle`}
               >
-                <span className="nav__dot" style={{ color: agent.colorVar }} />
+                <span
+                  className={`nav__dot ${isActive ? "nav__dot--live" : ""}`}
+                  style={{ color: agent.colorVar }}
+                />
                 <span className="nav__name">
                   {agent.name} <span className="nav__role">{agent.role}</span>
                 </span>
-                <span className="nav__state">{isActive ? "active" : "idle"}</span>
               </div>
             );
           })}
@@ -121,10 +131,34 @@ export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
           })}
         </div>
 
-        <p className="todo">
-          TODO (this session): make nodes selectable, draw the graph, and pull
-          the workflow list from the backend registry.
-        </p>
+        <div className="nav__group">
+          <button
+            type="button"
+            className="graph__toggle"
+            aria-expanded={graphOpen}
+            onClick={() => setGraphOpen((open) => !open)}
+          >
+            <span className={`graph__caret ${graphOpen ? "graph__caret--open" : ""}`}>
+              {graphOpen ? "▾" : "▸"}
+            </span>
+            Flow graph
+            <span className="graph__hint">
+              {graphOpen ? "drag a node, hover to trace" : "expand"}
+            </span>
+          </button>
+
+          {graphOpen && (
+            <div className="graph__frame">
+              <FlowGraph />
+              <p className="todo">
+                TODO: complete workflow till here. Clicking a node does nothing
+                yet -- selecting one should open what it is, its inputs and its
+                last output. A hollow node is a flow whose evidence note is not
+                written, so it answers with a refusal rather than an analysis.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

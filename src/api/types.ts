@@ -48,6 +48,14 @@ export interface LogEvent {
   level: EventLevel;
   agent: AgentSlug;
   workflow?: WorkflowId;      // which part of the workflow this belongs to
+  /**
+   * Who takes over because of this event.
+   *
+   * A delegation is logged by the agent handing off, so `agent` is Argos while
+   * the specialist is the one about to work. The active indicator follows this
+   * when it is present, and `agent` otherwise.
+   */
+  routedTo?: AgentSlug;
   message: string;            // plain English, one sentence
   detail?: string;            // optional technical remainder
   /**
@@ -195,4 +203,23 @@ export interface ExecuteNodeResponse {
   };
   /** The session's constants. Absent from the stub, which keeps no session. */
   session?: SessionFacts | null;
+  /**
+   * What Argos thinks should follow -- offered, never run.
+   *
+   * One specialist answers per turn and then the turn ends, so the next hop is
+   * the user's decision. It arrives here as something to show them, and takes
+   * effect only if they ask for it. Null when the question is answered and
+   * nothing obvious follows.
+   */
+  nextStep?: NextStep | null;
+}
+
+/** An analysis Argos suggests running next. */
+export interface NextStep {
+  /** In the user's words, not the flow's name. */
+  label: string;
+  /** The flow it maps to, or "" when nothing in the catalogue fits. */
+  flow: string;
+  /** One sentence: what running it would add. */
+  why: string;
 }

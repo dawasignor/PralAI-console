@@ -22,6 +22,7 @@ import type {
   ExecuteNodeResponse,
   LogEvent,
   PersonaId,
+  NextStep,
   SessionFacts,
   TaskPoll,
   WorkflowId,
@@ -67,6 +68,9 @@ export function useSession() {
   // The AOI and event window the backend settled. Null under the stub,
   // which keeps no session at all.
   const [facts, setFacts] = useState<SessionFacts | null>(null);
+  // What Argos offered to do next. Cleared when a new turn starts, because a
+  // suggestion from the previous answer is no longer the obvious next thing.
+  const [nextStep, setNextStep] = useState<NextStep | null>(null);
 
   // Run settings. Sent with every turn rather than applied once, so a change
   // takes effect on the next message and never rewrites what came before.
@@ -169,6 +173,7 @@ export function useSession() {
     stop.current = false;
     setIsRunning(true);
     setElapsedMs(0);
+    setNextStep(null);
     setMessages((prev) => [
       ...prev,
       { id: `u-${Date.now()}`, role: "user", text },
@@ -200,6 +205,7 @@ export function useSession() {
       // Kept when a turn comes back without them, so a failed turn does not
       // blank an AOI the session has already settled.
       if (response.session) setFacts(response.session);
+      setNextStep(response.nextStep ?? null);
       setElapsedMs(response.elapsedMs ?? ms);
       eventsAtTurnStart.current = [...before, ...response.events];
       setActiveAgent(null);
@@ -232,7 +238,9 @@ export function useSession() {
       setElapsedMs(poll.elapsedMs);
       setEvents([...before, ...poll.events]);
       const last = poll.events[poll.events.length - 1];
-      if (last) setActiveAgent(last.agent);
+      // routedTo when the event handed work over, so a delegation to
+      // Norwood lights up Norwood rather than the Argos that logged it.
+      if (last) setActiveAgent(last.routedTo ?? last.agent);
 
       // Past the failure threshold the console stops waiting. The run itself
       // carries on -- a thread mid-model-call cannot be called back -- and its
@@ -271,6 +279,7 @@ export function useSession() {
     activeAgent,
     workflowsRun,
     facts,
+    nextStep,
     persona,
     setPersona: choosePersona,
     verifiedSourcesOnly,

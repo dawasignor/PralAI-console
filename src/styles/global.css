@@ -842,3 +842,154 @@ button {
    message. */
 .clock--warn  { color: var(--warn); }
 .clock--error { color: var(--error); }
+
+/* --- suggested next step ------------------------------------------------ */
+/* An offer, not a queued action. It sits after the answer, is inert until
+   pressed, and disappears the moment a new turn starts. */
+.suggest {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 2px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.suggest__label {
+  color: var(--text-faint);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.suggest__go {
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.suggest__go:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.suggest__go:disabled { cursor: default; opacity: 0.5; }
+
+.suggest__why {
+  flex: 1 1 100%;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+/* --- agent state: the dot says it, not a word --------------------------- */
+/* Idle is dimmed rather than labelled "idle", which is a word nobody reads
+   twice. Active pulses, because motion is what the eye catches. */
+.nav__dot {
+  opacity: 0.28;
+  transition: opacity 300ms ease;
+}
+
+.nav__dot--live {
+  opacity: 1;
+  animation: nav-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes nav-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.82); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__dot--live { animation: none; }
+}
+
+/* --- the flow graph ----------------------------------------------------- */
+.graph__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.graph__toggle:hover { color: var(--text); }
+
+.graph__caret {
+  display: inline-block;
+  width: 10px;
+  color: var(--text-faint);
+}
+
+.graph__hint {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.graph__frame {
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.graph {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;   /* a drag must not scroll the panel underneath */
+}
+
+.graph__edge {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.graph__edge--lit { stroke: var(--accent); stroke-width: 1.6; }
+.graph__edge--dim { stroke-opacity: 0.25; }
+
+.graph__node { cursor: grab; }
+.graph__node:active { cursor: grabbing; }
+
+.graph__node circle {
+  fill: var(--panel-raised);
+  stroke: var(--text-faint);
+  stroke-width: 1.5;
+  transition: stroke 200ms ease, fill 200ms ease;
+}
+
+.graph__node text {
+  fill: var(--text-dim);
+  font-size: 9px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.graph__node--orchestrator circle { fill: var(--argos); stroke: var(--argos); }
+.graph__node--agent circle        { fill: var(--accent); stroke: var(--accent); }
+.graph__node--workflow circle     { fill: var(--monty); stroke: var(--monty); }
+.graph__node--flow circle         { fill: var(--citadel); stroke: var(--citadel); }
+
+/* Hollow: the procedure exists, the evidence note does not. */
+.graph__node--stub circle {
+  fill: none;
+  stroke-dasharray: 2.5 2;
+}
+
+.graph__node--dim circle { opacity: 0.22; }
+.graph__node--dim text   { opacity: 0.22; }
+
+.graph__node:hover circle { stroke: var(--text); stroke-width: 2.5; }
