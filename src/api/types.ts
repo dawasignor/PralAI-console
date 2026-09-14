@@ -93,7 +93,31 @@ export interface ExecuteNodeRequest {
    * the graph state instead and ignore this field.
    */
   glossarySeen?: string[];
-  context?: Record<string, unknown>;  // AOI, event window, anything pinned later
+  context?: Record<string, unknown>;  // reserved; the backend owns session state
+}
+
+/**
+ * The constants that hold for a whole session.
+ *
+ * The backend resolves these once -- the place name against the OpenStreetMap
+ * gazetteer, the time frame against the GDACS disaster register -- and then
+ * every agent works from the same ones. They are echoed back on every turn
+ * because the user is the only person who can tell at a glance that the AOI
+ * is the wrong Boston, and they cannot do that if it never appears on screen.
+ *
+ * Null until the backend has settled them. The stub never sets them at all.
+ */
+export interface SessionFacts {
+  aoi: string | null;
+  /** (west, south, east, north) in EPSG:4326, the order the workflows take. */
+  bbox: [number, number, number, number] | null;
+  window: string | null;
+  event: string | null;
+  /** False while the AOI or window is still a reading rather than a decision. */
+  confirmed: boolean;
+  turns: number;
+  /** What the agents have established so far, rewritten each turn by Argos. */
+  digest: string | null;
 }
 
 /** What comes back. */
@@ -111,4 +135,6 @@ export interface ExecuteNodeResponse {
     steps?: number;           // delegations spent
     workflowsRun?: WorkflowId[];
   };
+  /** The session's constants. Absent from the stub, which keeps no session. */
+  session?: SessionFacts | null;
 }
