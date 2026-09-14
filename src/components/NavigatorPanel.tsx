@@ -12,15 +12,21 @@
  *   - load the workflow list from the backend registry, see lib/framework.ts
  */
 
-import type { AgentSlug, WorkflowId } from "../api/types";
+import type { AgentSlug, SessionFacts, WorkflowId } from "../api/types";
 import { AGENTS, WORKFLOWS } from "../lib/framework";
 
 interface Props {
   activeAgent: AgentSlug | null;   // who acted most recently
   workflowsRun: WorkflowId[];      // workflows touched by the last turn
+  facts: SessionFacts | null;      // the AOI and window the backend settled
 }
 
-export function NavigatorPanel({ activeAgent, workflowsRun }: Props) {
+/** (w, s, e, n) to four decimals - about 10 m, finer than any AOI here. */
+function bboxText(bbox: [number, number, number, number]): string {
+  return bbox.map((value) => value.toFixed(4)).join(", ");
+}
+
+export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
   return (
     <section className="panel" aria-label="Nodes and workflows">
       <header className="panel__head">
@@ -29,6 +35,50 @@ export function NavigatorPanel({ activeAgent, workflowsRun }: Props) {
       </header>
 
       <div className="panel__scroll">
+        {/*
+          The session's constants, first because they are the thing the reader
+          can actually check. Every agent works from these, and the one error
+          nobody downstream can catch - the wrong Boston, the wrong year - is
+          obvious here in a glance.
+        */}
+        <div className="nav__group">
+          <p className="nav__label">Session</p>
+          {facts?.aoi ? (
+            <>
+              <div className="fact">
+                <span className="fact__key">Area</span>
+                <span className="fact__value">{facts.aoi}</span>
+              </div>
+              {facts.bbox && (
+                <div className="fact">
+                  <span className="fact__key">Bounds</span>
+                  <span className="fact__value fact__value--mono">
+                    {bboxText(facts.bbox)}
+                  </span>
+                </div>
+              )}
+              <div className="fact">
+                <span className="fact__key">When</span>
+                <span className="fact__value">
+                  {facts.window ?? "not resolved yet"}
+                </span>
+              </div>
+              {!facts.confirmed && (
+                <p className="fact__warn">
+                  Not confirmed - the agents are told to say so when they rely
+                  on it.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="nav__empty">
+              No area yet. Name a place and roughly when, and Argos will settle
+              both against the OpenStreetMap gazetteer and the GDACS disaster
+              register before it runs anything.
+            </p>
+          )}
+        </div>
+
         <div className="nav__group">
           <p className="nav__label">Agents</p>
           {AGENTS.map((agent) => {

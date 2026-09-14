@@ -16,7 +16,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { executeNode } from "../api/client";
-import type { AgentSlug, LogEvent, PersonaId, WorkflowId } from "../api/types";
+import type {
+  AgentSlug,
+  LogEvent,
+  PersonaId,
+  SessionFacts,
+  WorkflowId,
+} from "../api/types";
 import { newSessionId } from "../lib/format";
 import { DEFAULT_PERSONA, personaInfo } from "../lib/personas";
 
@@ -46,6 +52,9 @@ export function useSession() {
   const [isRunning, setIsRunning] = useState(false);
   const [activeAgent, setActiveAgent] = useState<AgentSlug | null>(null);
   const [workflowsRun, setWorkflowsRun] = useState<WorkflowId[]>([]);
+  // The AOI and event window the backend settled. Null under the stub,
+  // which keeps no session at all.
+  const [facts, setFacts] = useState<SessionFacts | null>(null);
 
   // Run settings. Sent with every turn rather than applied once, so a change
   // takes effect on the next message and never rewrites what came before.
@@ -164,6 +173,9 @@ export function useSession() {
         },
       ]);
       setWorkflowsRun(response.state?.workflowsRun ?? []);
+      // Kept when a turn comes back without them, so a failed turn does not
+      // blank an AOI the session has already settled.
+      if (response.session) setFacts(response.session);
       setActiveAgent(null);
       setIsRunning(false);
       busy.current = false;
@@ -178,6 +190,7 @@ export function useSession() {
     isRunning,
     activeAgent,
     workflowsRun,
+    facts,
     persona,
     setPersona: choosePersona,
     verifiedSourcesOnly,

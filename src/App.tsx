@@ -23,6 +23,7 @@ export default function App() {
     isRunning,
     activeAgent,
     workflowsRun,
+    facts,
     persona,
     setPersona,
     verifiedSourcesOnly,
@@ -45,7 +46,11 @@ export default function App() {
 
       <div className="shell__side">
         {/* 2. where the run is in the graph */}
-        <NavigatorPanel activeAgent={activeAgent} workflowsRun={workflowsRun} />
+        <NavigatorPanel
+          activeAgent={activeAgent}
+          workflowsRun={workflowsRun}
+          facts={facts}
+        />
 
         {/* 3. what the run actually did */}
         <SessionLog events={events} />
