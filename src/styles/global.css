@@ -824,75 +824,21 @@ button {
 }
 
 /* --- the run clock ------------------------------------------------------ */
-/* Sits beside Send, where someone waiting is already looking. Idle it shows
-   the last run's duration in a dim monospace; live it lights up and, past the
-   thresholds, carries a sentence saying what the wait means. */
+/* Inline with the working indicator, the way an elapsed timer sits beside a
+   "thinking" label. It carries a number and a colour and nothing else: a
+   sentence that appears at twenty seconds is read once and is furniture by the
+   third run. */
 .clock {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  padding: 4px 8px;
-  border: 1px solid transparent;
-  border-radius: 6px;
   color: var(--text-faint);
-  font-size: 12px;
-  /* Tabular figures: without them the whole row twitches every second as the
+  font-family: var(--mono);
+  font-size: 11.5px;
+  /* Tabular figures, or the label beside it twitches every second as the
      digits change width. */
   font-variant-numeric: tabular-nums;
+  transition: color 400ms ease;
 }
 
-.clock__time {
-  font-family: var(--mono);
-}
-
-.clock__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--line);
-}
-
-.clock--live {
-  border-color: var(--line);
-  color: var(--text-dim);
-}
-
-.clock--live .clock__dot {
-  background: var(--accent);
-  animation: clock-pulse 1.6s ease-in-out infinite;
-}
-
-.clock--warn {
-  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
-  color: var(--warn);
-}
-
-.clock--warn .clock__dot {
-  background: var(--warn);
-}
-
-.clock--error {
-  border-color: color-mix(in srgb, var(--error) 45%, transparent);
-  color: var(--error);
-}
-
-.clock--error .clock__dot {
-  background: var(--error);
-  animation: none;
-}
-
-.clock__note {
-  font-size: 11.5px;
-}
-
-@keyframes clock-pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.25; }
-}
-
-/* A pulsing dot is decoration; it must not move for anyone who asked that
-   things stop moving. */
-@media (prefers-reduced-motion: reduce) {
-  .clock--live .clock__dot { animation: none; }
-}
+/* Past the slow threshold, then past the failure one. The colour is the whole
+   message. */
+.clock--warn  { color: var(--warn); }
+.clock--error { color: var(--error); }
