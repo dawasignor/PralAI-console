@@ -46,3 +46,34 @@ export const agentInfo = (slug: AgentSlug): AgentInfo =>
 
 export const workflowInfo = (id: WorkflowId): WorkflowInfo | undefined =>
   WORKFLOWS.find((w) => w.id === id);
+
+/**
+ * Citadel's analysis flows, as Argos sees them in its routing menu.
+ *
+ * `ready` means the flow has a knowledge note and a sources note behind it and
+ * can produce a sourced answer. `stub` means the procedure is written and the
+ * evidence is not -- selecting one gets an honest refusal, which is the
+ * designed behaviour, not a bug to hide.
+ *
+ * TODO(session): fetch from the backend, same as WORKFLOWS above. These mirror
+ * `agents/citadel/workflows/*.md` and go stale the moment a flow is added.
+ */
+export interface FlowInfo {
+  id: string;
+  label: string;
+  nexus: "water" | "food" | "energy" | "other";
+  ready: boolean;
+}
+
+export const FLOWS: FlowInfo[] = [
+  { id: "sewage_infection_risk", label: "Sewage and infection risk", nexus: "water", ready: true },
+  { id: "drinking_water_scarcity", label: "Drinking water scarcity", nexus: "water", ready: false },
+  { id: "critical_infrastructure_and_waterlogging", label: "Critical infrastructure", nexus: "water", ready: false },
+  { id: "primary_cooking_fuel_disruption", label: "Cooking fuel disruption", nexus: "food", ready: false },
+  { id: "food_aid_and_relief_estimation", label: "Food aid and relief", nexus: "food", ready: false },
+  { id: "power_outage_and_disruption_risk", label: "Power outage", nexus: "energy", ready: false },
+  { id: "electric_shock_hazard", label: "Electric shock hazard", nexus: "energy", ready: false },
+  { id: "rockfall_treefall_and_landslide_risk", label: "Landslide and rockfall", nexus: "other", ready: false },
+  { id: "cultural_heritage_and_home_flooding_risk", label: "Heritage and home flooding", nexus: "other", ready: false },
+  { id: "river_and_ocean_hazard", label: "River and ocean hazard", nexus: "other", ready: false },
+];

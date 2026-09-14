@@ -8,11 +8,15 @@
 
 import { useEffect, useRef } from "react";
 
-import type { PersonaId } from "../api/types";
+import type {
+  NextStep,
+  PersonaId,
+} from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
 import { agentInfo } from "../lib/framework";
 import { renderMarkdown } from "../lib/markdown";
 import { Composer } from "./Composer";
+import { NextStepChip } from "./NextStepChip";
 import { RunClock } from "./RunClock";
 
 interface Props {
@@ -24,14 +28,17 @@ interface Props {
   onPersonaChange: (persona: PersonaId) => void;
   verifiedSourcesOnly: boolean;
   onVerifiedChange: (value: boolean) => void;
-  /** Passed straight through to the clock beside Send. */
+  /** Passed straight through to the clock on the working line. */
   elapsedMs: number;
+  /** What Argos offered to do next, or null. */
+  nextStep: NextStep | null;
 }
 
 export function ChatPanel({
   messages,
   isRunning,
   elapsedMs,
+  nextStep,
   onSend,
   persona,
   onPersonaChange,
@@ -64,6 +71,9 @@ export function ChatPanel({
               <RunClock elapsedMs={elapsedMs} />
               Argos is orchestrating...
             </div>
+          )}
+          {!isRunning && (
+            <NextStepChip step={nextStep} disabled={isRunning} onRun={onSend} />
           )}
           <div ref={endRef} />
         </div>

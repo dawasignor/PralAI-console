@@ -25,6 +25,7 @@ export default function App() {
     workflowsRun,
     facts,
     elapsedMs,
+    nextStep,
     persona,
     setPersona,
     verifiedSourcesOnly,
@@ -39,6 +40,7 @@ export default function App() {
         messages={messages}
         isRunning={isRunning}
         elapsedMs={elapsedMs}
+        nextStep={nextStep}
         onSend={send}
         persona={persona}
         onPersonaChange={setPersona}
