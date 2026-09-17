@@ -9,7 +9,8 @@
 
 import type { LogEvent } from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
-import { agentInfo, workflowInfo } from "./framework";
+import { agentInfo } from "./framework";
+import { workflowInfo } from "./workflows";
 import { clock } from "./format";
 
 /** ISO-ish stamp for the header line, so a pasted transcript is dateable. */

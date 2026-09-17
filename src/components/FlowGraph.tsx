@@ -19,7 +19,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { AGENTS, FLOWS, WORKFLOWS } from "../lib/framework";
+import type { WorkflowInfo } from "../api/types";
+import { AGENTS, FLOWS } from "../lib/framework";
+import { useWorkflows } from "../lib/workflows";
 
 type Kind = "orchestrator" | "agent" | "flow" | "workflow";
 
@@ -47,7 +49,7 @@ const SIZE: Record<Kind, number> = {
 const W = 460;
 const H = 340;
 
-function build(): { nodes: Node[]; edges: Edge[] } {
+function build(workflows: WorkflowInfo[]): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
@@ -74,9 +76,9 @@ function build(): { nodes: Node[]; edges: Edge[] } {
     edges.push({ from: "citadel", to: flow.id });
   });
 
-  WORKFLOWS.forEach((workflow, i) => {
+  workflows.forEach((workflow, i) => {
     nodes.push({ id: workflow.id, label: workflow.label, kind: "workflow",
-                 ready: true, ...place(i + 0.5, WORKFLOWS.length, 118),
+                 ready: true, ...place(i + 0.5, workflows.length, 118),
                  vx: 0, vy: 0 });
     edges.push({ from: "monty", to: workflow.id });
   });
@@ -145,7 +147,12 @@ function step(nodes: Node[], edges: Edge[], held: string | null) {
 }
 
 export function FlowGraph() {
-  const initial = useMemo(build, []);
+  const workflows = useWorkflows();
+  // Rebuilt when the registry lands, which is normally one frame after the
+  // popup opens. Keyed on the ids rather than the array, so a refetch that
+  // returns the same workflows does not restart a settled layout.
+  const initial = useMemo(() => build(workflows),
+                          [workflows.map((w) => w.id).join(",")]);
   const [nodes, setNodes] = useState<Node[]>(initial.nodes);
   const [hover, setHover] = useState<string | null>(null);
   const edges = initial.edges;
@@ -164,6 +171,18 @@ export function FlowGraph() {
    * overwritten before it can be seen -- which is exactly what happened.
    */
   const live = useRef<Node[]>(initial.nodes.map((n) => ({ ...n })));
+
+  // `live` is a ref, so it keeps the node set it was created with. When the
+  // registry lands the graph gains nodes, and without this the simulation goes
+  // on animating the old set -- the new workflow renders once and then never
+  // moves, because nothing in the loop knows about it. Resetting the tick
+  // count too, so the enlarged graph gets a full settle rather than inheriting
+  // the budget the smaller one had already spent.
+  useEffect(() => {
+    live.current = initial.nodes.map((n) => ({ ...n }));
+    ticks.current = 0;
+    setNodes(initial.nodes);
+  }, [initial]);
 
   useEffect(() => {
     const loop = () => {

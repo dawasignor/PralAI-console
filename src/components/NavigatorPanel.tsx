@@ -15,7 +15,8 @@
 import { useState } from "react";
 
 import type { AgentSlug, SessionFacts, WorkflowId } from "../api/types";
-import { AGENTS, WORKFLOWS } from "../lib/framework";
+import { AGENTS } from "../lib/framework";
+import { useWorkflows } from "../lib/workflows";
 import { FlowGraph } from "./FlowGraph";
 
 interface Props {
@@ -31,6 +32,7 @@ function bboxText(bbox: [number, number, number, number]): string {
 
 export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
   const [graphOpen, setGraphOpen] = useState(false);
+  const workflows = useWorkflows();
 
   return (
     <section className="panel" aria-label="Nodes and workflows">
@@ -110,7 +112,7 @@ export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
 
         <div className="nav__group">
           <p className="nav__label">Workflows</p>
-          {WORKFLOWS.map((workflow) => {
+          {workflows.map((workflow) => {
             const wasRun = workflowsRun.includes(workflow.id);
             return (
               <div
