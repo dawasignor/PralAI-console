@@ -34,6 +34,11 @@ export interface WorkflowInfo {
 }
 
 export const WORKFLOWS: WorkflowInfo[] = [
+  // First because it is the one that *produces* a bounding box; the other four
+  // consume one. Its three lookups run in dependency order -- gazetteer, then
+  // Overpass, then the disaster register -- so a register that is down or
+  // ambiguous no longer costs the AOI.
+  { id: "fetch_place_context", label: "Place, exposure and event", source: "OSM Nominatim + Overpass + GDACS" },
   { id: "fetch_weather_data", label: "Weather and soil moisture", source: "Open-Meteo + ERA5-Land" },
   { id: "fetch_lulc_data", label: "Land-cover indices", source: "Sentinel-2 L2A" },
   { id: "fetch_terrain_data", label: "Elevation and slope", source: "Copernicus DEM GLO-30" },

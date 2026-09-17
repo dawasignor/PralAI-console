@@ -20,6 +20,7 @@ export type AgentSlug = "argos" | "norwood" | "monty" | "entro" | "citadel";
  * hardcoding it, so a newly registered workflow shows up here automatically.
  */
 export type WorkflowId =
+  | "fetch_place_context"
   | "fetch_weather_data"
   | "fetch_lulc_data"
   | "fetch_terrain_data"
