@@ -1,16 +1,14 @@
 /**
- * Who the agents are and what workflows exist.
+ * Who the agents are, and what analyses Citadel can run.
  *
- * This is the console's mirror of the backend: agents match AgentSlug in
- * core/state.py, workflows match docs/WORKFLOWS.md. Both the navigation panel
- * and the session log read from here, so a name is written once.
+ * The console's mirror of the backend: agents match AgentSlug in core/state.py.
  *
- * TODO(session): fetch this from the backend registry instead. Hardcoding it
- * means a workflow registered in Python is invisible here until someone
- * remembers to edit this file.
+ * Workflows used to be mirrored here too and are not any more -- they are
+ * served from the registry and read through `lib/workflows.ts`. What is left
+ * in this file is what has no endpoint behind it yet.
  */
 
-import type { AgentSlug, WorkflowId } from "../api/types";
+import type { AgentSlug } from "../api/types";
 
 export interface AgentInfo {
   slug: AgentSlug;
@@ -27,30 +25,16 @@ export const AGENTS: AgentInfo[] = [
   { slug: "citadel", name: "Citadel", role: "Planning decisions", colorVar: "var(--citadel)" },
 ];
 
-export interface WorkflowInfo {
-  id: WorkflowId;
-  label: string;
-  source: string;        // where the data actually comes from
-}
+/**
+ * Workflows are NOT here. They are served by the backend registry and read
+ * through `lib/workflows.ts` -- the copy that used to live in this file went
+ * stale three times. Agents and flows are still hardcoded below; see the TODO
+ * on FLOWS.
+ */
 
-export const WORKFLOWS: WorkflowInfo[] = [
-  // First because it is the one that *produces* a bounding box; the other four
-  // consume one. Its three lookups run in dependency order -- gazetteer, then
-  // Overpass, then the disaster register -- so a register that is down or
-  // ambiguous no longer costs the AOI.
-  { id: "fetch_place_context", label: "Place, exposure and event", source: "OSM Nominatim + Overpass + GDACS" },
-  { id: "fetch_weather_data", label: "Weather and soil moisture", source: "Open-Meteo + ERA5-Land" },
-  { id: "fetch_lulc_data", label: "Land-cover indices", source: "Sentinel-2 L2A" },
-  { id: "fetch_terrain_data", label: "Elevation and slope", source: "Copernicus DEM GLO-30" },
-  { id: "fetch_permanent_water", label: "Permanent water baseline", source: "JRC Global Surface Water" },
-];
-
-/** Look-ups by slug/id, so components do not each write their own find(). */
+/** Look-ups by slug, so components do not each write their own find(). */
 export const agentInfo = (slug: AgentSlug): AgentInfo =>
   AGENTS.find((a) => a.slug === slug) ?? AGENTS[0];
-
-export const workflowInfo = (id: WorkflowId): WorkflowInfo | undefined =>
-  WORKFLOWS.find((w) => w.id === id);
 
 /**
  * Citadel's analysis flows, as Argos sees them in its routing menu.

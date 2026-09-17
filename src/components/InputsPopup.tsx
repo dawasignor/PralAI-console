@@ -24,7 +24,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { PersonaId, SessionFacts, WorkflowId } from "../api/types";
-import { WORKFLOWS, workflowInfo } from "../lib/framework";
+import { useWorkflows, workflowInfo } from "../lib/workflows";
 import { personaInfo } from "../lib/personas";
 
 interface Props {
@@ -56,6 +56,7 @@ export function InputsPopup({ facts, workflowsRun, persona,
                               verifiedSourcesOnly }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const workflows = useWorkflows();
 
   // Escape and outside-click, bound only while open -- the same behaviour the
   // persona picker has, so the two popups do not feel like different apps.
@@ -75,7 +76,7 @@ export function InputsPopup({ facts, workflowsRun, persona,
     };
   }, [open]);
 
-  const ran = WORKFLOWS.filter((w) => workflowsRun.includes(w.id));
+  const ran = workflows.filter((w) => workflowsRun.includes(w.id));
 
   return (
     <div className="inputs" ref={rootRef}>

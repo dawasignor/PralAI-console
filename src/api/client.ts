@@ -10,6 +10,7 @@ import type {
   ExecuteNodeRequest,
   ExecuteNodeResponse,
   TaskPoll,
+  WorkflowInfo,
 } from "./types";
 
 /**
@@ -84,4 +85,27 @@ export async function pollTask(taskId: string): Promise<TaskPoll> {
     };
   }
   return (await res.json()) as TaskPoll;
+}
+
+/**
+ * The workflows Monty can run, from the backend registry.
+ *
+ * This list used to live in `src/lib/framework.ts` as a hand-written copy of
+ * `core/workflows/`, and went stale three times -- a function registered in
+ * Python stayed invisible in the navigator and the flow graph until somebody
+ * remembered to edit a second file in a second language.
+ *
+ * Returns `[]` rather than throwing. The panel and the graph are context, not
+ * the app: a backend that is down should cost the console its workflow list,
+ * not its ability to show a conversation.
+ */
+export async function fetchWorkflows(): Promise<WorkflowInfo[]> {
+  try {
+    const res = await fetch(`${API_BASE}/workflows`);
+    if (!res.ok) return [];
+    const body = (await res.json()) as { workflows?: WorkflowInfo[] };
+    return body.workflows ?? [];
+  } catch {
+    return [];
+  }
 }

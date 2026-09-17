@@ -15,16 +15,23 @@
 export type AgentSlug = "argos" | "norwood" | "monty" | "entro" | "citadel";
 
 /**
- * Workflows Monty can run. Mirrors docs/WORKFLOWS.md in the agent repo.
- * TODO(session): generate this list from the backend registry instead of
- * hardcoding it, so a newly registered workflow shows up here automatically.
+ * A workflow Monty can run, as the backend registry describes it.
+ *
+ * `WorkflowId` is a plain string and not a union of the five names we happen
+ * to know about today: the list is served from `core/workflows/` at runtime
+ * (`GET /api/workflows`), so the console cannot know the membership at compile
+ * time -- and a union would have been another copy of the registry to go
+ * stale, which is the thing this replaced.
  */
-export type WorkflowId =
-  | "fetch_place_context"
-  | "fetch_weather_data"
-  | "fetch_lulc_data"
-  | "fetch_terrain_data"
-  | "fetch_permanent_water";
+export type WorkflowId = string;
+
+export interface WorkflowInfo {
+  id: WorkflowId;
+  label: string;        // short human name for the panel and the graph
+  source: string;       // where the data actually comes from
+  description: string;  // the one-liner the routing prompt sees
+  params: string[];     // parameter names, the only truth about the signature
+}
 
 /** How a step went. Drives the colour of a log line and a node's badge. */
 export type EventLevel = "info" | "ok" | "warn" | "error";

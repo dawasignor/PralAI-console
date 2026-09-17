@@ -18,7 +18,8 @@ import { useEffect, useRef } from "react";
 import type { LogEvent } from "../api/types";
 import { logTranscript } from "../lib/transcript";
 import { CopyButton } from "./CopyButton";
-import { agentInfo, workflowInfo } from "../lib/framework";
+import { agentInfo } from "../lib/framework";
+import { workflowInfo } from "../lib/workflows";
 import { clock } from "../lib/format";
 
 interface Props {
