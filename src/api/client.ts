@@ -20,6 +20,15 @@ import type {
  */
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
+/**
+ * Where the PNG behind `<image - name>` is served. A plain URL rather than a
+ * fetch: the <img> element loads it, so the browser runs the requests in
+ * parallel and caches them. `name` is validated in lib/figures.ts first.
+ */
+export function figureUrl(name: string): string {
+  return `${API_BASE}/figure/${encodeURIComponent(name)}`;
+}
+
 export async function executeNode(
   request: ExecuteNodeRequest,
 ): Promise<TaskPoll> {

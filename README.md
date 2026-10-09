@@ -116,6 +116,17 @@ archive-api.open-meteo.com | hourly + daily | timezone=local
 format is **provisional** - it mirrors `core/logbook.py` in the agent repo but
 has not been agreed against it yet. See [TODO.md](TODO.md).
 
+### Figures in an answer
+
+Argus can place a cached figure in its answer with a placeholder on its own
+line, `<image - kelani-2025-bui>`: the experiment (`region-year`) and the
+figure name. `src/lib/figures.ts` splits the reply on these. The text renders
+at once; each figure is its own `<img>` (`src/components/FigureImage.tsx`)
+loading from `GET {VITE_API_BASE}/figure/<name>`, so images arrive in parallel
+and never hold up the text. A name the backend does not have shows "Figure
+unavailable" in place. The figures live only in the backend's local
+`experiments/` folder, so the Netlify demo has none.
+
 ---
 
 ## Running it
