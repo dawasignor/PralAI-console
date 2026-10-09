@@ -1,6 +1,6 @@
 # Argos Console
 
-A front end for the five-agent flood-analysis framework in
+A front end for Sangam, the five-agent flood-analysis framework in
 `E:\Claude code\langgraph-agents`. It exists to **showcase the research** - to
 give a reader one screen where they can ask a question, watch the orchestration
 happen, and see where it succeeded or failed.
