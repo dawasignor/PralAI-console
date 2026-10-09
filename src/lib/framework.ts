@@ -1,5 +1,5 @@
 /**
- * Who the agents are, and what analyses Citadel can run.
+ * Who the agents are, and what analyses Chanakya can run.
  *
  * The console's mirror of the backend: agents match AgentSlug in core/state.py.
  *
@@ -22,7 +22,7 @@ export const AGENTS: AgentInfo[] = [
   { slug: "norwood", name: "Norwood", role: "Earth observation", colorVar: "var(--norwood)" },
   { slug: "monty", name: "Monty", role: "Runs the workflows", colorVar: "var(--monty)" },
   { slug: "entro", name: "Entro", role: "Uncertainty", colorVar: "var(--entro)" },
-  { slug: "citadel", name: "Citadel", role: "Planning decisions", colorVar: "var(--citadel)" },
+  { slug: "chanakya", name: "Chanakya", role: "Planning decisions", colorVar: "var(--chanakya)" },
 ];
 
 /**
@@ -37,7 +37,7 @@ export const agentInfo = (slug: AgentSlug): AgentInfo =>
   AGENTS.find((a) => a.slug === slug) ?? AGENTS[0];
 
 /**
- * Citadel's analysis flows, as Argos sees them in its routing menu.
+ * Chanakya's analysis flows, as Argos sees them in its routing menu.
  *
  * `ready` means the flow has a knowledge note and a sources note behind it and
  * can produce a sourced answer. `stub` means the procedure is written and the
@@ -45,7 +45,8 @@ export const agentInfo = (slug: AgentSlug): AgentInfo =>
  * designed behaviour, not a bug to hide.
  *
  * TODO(session): fetch from the backend, same as WORKFLOWS above. These mirror
- * `agents/citadel/workflows/*.md` and go stale the moment a flow is added.
+ * `agents/citadel/workflows/*.md` (the backend still calls Chanakya
+ * `citadel`; api/console_server.py renames it) and go stale the moment a flow is added.
  */
 export interface FlowInfo {
   id: string;

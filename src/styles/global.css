@@ -31,7 +31,7 @@
   --norwood: #a371f7;
   --monty: #3fb950;
   --entro: #d29922;
-  --citadel: #ff7b72;
+  --chanakya: #ff7b72;
 
   --radius: 10px;
   --gap: 12px;
@@ -887,6 +887,15 @@ button {
   line-height: 1.45;
 }
 
+.suggest__workflow {
+  font-size: 11px;
+  color: var(--monty);
+}
+
+.suggest__workflow code {
+  font-family: var(--mono);
+}
+
 /* --- agent state: the dot says it, not a word --------------------------- */
 /* Idle is dimmed rather than labelled "idle", which is a word nobody reads
    twice. Active pulses, because motion is what the eye catches. */
@@ -981,7 +990,7 @@ button {
 .graph__node--orchestrator circle { fill: var(--argos); stroke: var(--argos); }
 .graph__node--agent circle        { fill: var(--accent); stroke: var(--accent); }
 .graph__node--workflow circle     { fill: var(--monty); stroke: var(--monty); }
-.graph__node--flow circle         { fill: var(--citadel); stroke: var(--citadel); }
+.graph__node--flow circle         { fill: var(--chanakya); stroke: var(--chanakya); }
 
 /* Hollow: the procedure exists, the evidence note does not. */
 .graph__node--stub circle {
@@ -1092,4 +1101,48 @@ button {
   color: var(--text-dim);
   font-size: 11.5px;
   line-height: 1.5;
+}
+
+/* --- Figures inside an answer --------------------------------------------
+   `<image - region-year-figure>` in a reply becomes one of these. Each loads
+   on its own, so the box holds its place while the PNG arrives.
+   -------------------------------------------------------------------------- */
+
+.fig {
+  margin: 10px 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  white-space: normal;
+}
+
+.fig img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.fig--loading img {
+  /* Keep the element in the DOM so the request runs, but hidden until done. */
+  height: 0;
+}
+
+.fig__status {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.fig--missing .fig__status {
+  color: var(--warn);
+}
+
+.fig__caption {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
 }
