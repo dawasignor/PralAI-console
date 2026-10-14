@@ -26,6 +26,7 @@ export default function App() {
     facts,
     elapsedMs,
     nextStep,
+    thesisPath,
     persona,
     setPersona,
     verifiedSourcesOnly,
@@ -54,7 +55,7 @@ export default function App() {
         {/* 2. where the run is in the graph */}
         <NavigatorPanel
           activeAgent={activeAgent}
-          workflowsRun={workflowsRun}
+          thesisPath={thesisPath}
           facts={facts}
         />
 
