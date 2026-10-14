@@ -137,27 +137,23 @@ export interface SessionFacts {
 }
 
 /**
- * How long a run may take before the console says something about it.
+ * When a run stops being ordinary -- the one number behind the clock.
  *
- * The only two numbers behind the clock, so retuning is a one-line edit.
+ * 20 s: a question answered from the session alone comes back inside that,
+ * so marking anything sooner would make every turn look like a problem. Past
+ * it the clock turns amber. It puts no sentence on screen: a line of
+ * reassurance appearing at twenty seconds is read once and is furniture by
+ * the third run.
  *
- * 20 s is where a run stops being ordinary: a question answered from the
- * session alone comes back inside that, so saying anything sooner would make
- * every turn look like a problem.
- *
- * 300 s is far past everything measured on this backend -- a simple question
- * 21 s, a Chanakya flow 39-64 s, a four-workflow Derna run 94 s. It is a
- * deadline for a run that has genuinely stopped, not a guess at how long work
- * takes, which is why it sits clear of the slowest real run rather than near
- * it. Past it the console stops waiting and the answer, if one ever arrives,
- * is discarded.
- *
- * Neither threshold puts a sentence on screen. The clock turns amber, then
- * red; a line of reassurance appearing at twenty seconds is read once and is
- * furniture by the third run.
+ * **There is no deadline** (user decision, 2026-10-14). The console used to
+ * stop waiting at 300 s and discard any answer that came after; workflow runs
+ * -- a validation, a multi-workflow event -- can legitimately take longer, and
+ * the backend kept working regardless. The console now waits for the answer
+ * however long the run takes. A run that has genuinely died still ends: the
+ * backend reports a crash as an answer, and a restarted backend answers
+ * "unknown", which stops the polling.
  */
 export const SLOW_AFTER_MS = 20_000;
-export const FAILED_AFTER_MS = 300_000;
 
 /**
  * What the backend says when asked how a run is going.
@@ -220,6 +216,33 @@ export interface ExecuteNodeResponse {
    * nothing obvious follows.
    */
   nextStep?: NextStep | null;
+  /**
+   * The thesis outputs in order and how far this session is, for the
+   * flowchart. Absent from the stub, which keeps no session.
+   */
+  thesisPath?: ThesisStep[] | null;
+}
+
+/**
+ * One step of the thesis path (core/thesis_path.py on the backend).
+ *
+ * "done": run for this AOI and window. "next": the first step not done whose
+ * `needs` are all done -- the one Argos recommends. "todo": everything else.
+ */
+export interface ThesisStep {
+  id: string;
+  label: string;
+  /** "Output 1", "Outputs 3-4", or "" for a step that feeds one. */
+  output: string;
+  kind: "workflow" | "flow";
+  /** The workflow, or `agent:flow` for an analysis. */
+  name: string;
+  /** Ids of the steps this one stands on -- the flowchart's edges. */
+  needs: string[];
+  status: "done" | "next" | "todo";
+  /** What the console would send to run it. */
+  prompt: string;
+  why: string;
 }
 
 /** An analysis Argos suggests running next. */

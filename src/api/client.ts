@@ -10,6 +10,7 @@ import type {
   ExecuteNodeRequest,
   ExecuteNodeResponse,
   TaskPoll,
+  ThesisStep,
   WorkflowInfo,
 } from "./types";
 
@@ -114,6 +115,27 @@ export async function fetchWorkflows(): Promise<WorkflowInfo[]> {
     if (!res.ok) return [];
     const body = (await res.json()) as { workflows?: WorkflowInfo[] };
     return body.workflows ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The thesis path for this session, for the flowchart's first paint.
+ *
+ * Every finished run carries the same view as `thesisPath`; this covers the
+ * moment before the first answer and a reload. Returns `[]` rather than
+ * throwing -- the stub has no such route, and a missing flowchart must not
+ * cost the console the conversation.
+ */
+export async function fetchThesisPath(sessionId: string): Promise<ThesisStep[]> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/thesis_path?sessionId=${encodeURIComponent(sessionId)}`,
+    );
+    if (!res.ok) return [];
+    const body = (await res.json()) as { thesisPath?: ThesisStep[] };
+    return body.thesisPath ?? [];
   } catch {
     return [];
   }

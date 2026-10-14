@@ -15,8 +15,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { executeNode, pollTask } from "../api/client";
-import { FAILED_AFTER_MS, isRunning as stillRunning } from "../api/types";
+import { executeNode, fetchThesisPath, pollTask } from "../api/client";
+import { isRunning as stillRunning } from "../api/types";
 import type {
   AgentSlug,
   ExecuteNodeResponse,
@@ -25,6 +25,7 @@ import type {
   NextStep,
   SessionFacts,
   TaskPoll,
+  ThesisStep,
   WorkflowId,
 } from "../api/types";
 
@@ -71,6 +72,9 @@ export function useSession() {
   // What Argos offered to do next. Cleared when a new turn starts, because a
   // suggestion from the previous answer is no longer the obvious next thing.
   const [nextStep, setNextStep] = useState<NextStep | null>(null);
+  // The thesis outputs and how far this session is, for the flowchart. Empty
+  // until the backend answers; the stub never does.
+  const [thesisPath, setThesisPath] = useState<ThesisStep[]>([]);
 
   // Run settings. Sent with every turn rather than applied once, so a change
   // takes effect on the next message and never rewrites what came before.
@@ -109,6 +113,18 @@ export function useSession() {
     return () => {
       stop.current = true;
       timers.current.forEach((t) => window.clearTimeout(t));
+    };
+  }, []);
+
+  // The flowchart before the first answer: every step todo, the first one
+  // glowing. A finished turn replaces it with the session's own.
+  useEffect(() => {
+    let live = true;
+    void fetchThesisPath(sessionId.current).then((path) => {
+      if (live && path.length) setThesisPath(path);
+    });
+    return () => {
+      live = false;
     };
   }, []);
 
@@ -206,6 +222,9 @@ export function useSession() {
       // blank an AOI the session has already settled.
       if (response.session) setFacts(response.session);
       setNextStep(response.nextStep ?? null);
+      // Kept when absent, like the facts: a crashed turn says nothing about
+      // how far the session got.
+      if (response.thesisPath?.length) setThesisPath(response.thesisPath);
       setElapsedMs(response.elapsedMs ?? ms);
       eventsAtTurnStart.current = [...before, ...response.events];
       setActiveAgent(null);
@@ -242,27 +261,11 @@ export function useSession() {
       // Norwood lights up Norwood rather than the Argos that logged it.
       if (last) setActiveAgent(last.routedTo ?? last.agent);
 
-      // Past the failure threshold the console stops waiting. The run itself
-      // carries on -- a thread mid-model-call cannot be called back -- and its
-      // answer is discarded, which is what "it failed" has to mean if the
-      // message is not to be contradicted a minute later.
-      if (poll.elapsedMs >= FAILED_AFTER_MS) {
-        land(
-          {
-            sessionId: sessionId.current,
-            node: "argos",
-            status: "error",
-            reply:
-              "It failed. Try again sometime later.\n\nThe run passed " +
-              `${Math.round(FAILED_AFTER_MS / 1000)} seconds without ` +
-              "answering, so the console stopped waiting for it.",
-            events: poll.events,
-          },
-          poll.elapsedMs,
-        );
-        return;
-      }
-
+      // No deadline (user decision, 2026-10-14): the console waits as long as
+      // the run takes. It used to give up at 300 s and discard a late answer
+      // while the backend went on working. A run still ends on its own terms:
+      // the backend reports a crash as an answer, and "unknown" (a restarted
+      // backend) stops this loop.
       await new Promise((resume) => {
         timers.current.push(window.setTimeout(resume, POLL_EVERY_MS));
       });
@@ -280,6 +283,7 @@ export function useSession() {
     workflowsRun,
     facts,
     nextStep,
+    thesisPath,
     persona,
     setPersona: choosePersona,
     verifiedSourcesOnly,
