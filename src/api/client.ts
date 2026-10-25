@@ -26,6 +26,11 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
  * fetch: the <img> element loads it, so the browser runs the requests in
  * parallel and caches them. `name` is validated in lib/figures.ts first.
  */
+/** The data behind a `<table - t-...>` placeholder (core/tables.py). */
+export function tableUrl(id: string): string {
+  return `${API_BASE}/table/${encodeURIComponent(id)}`;
+}
+
 export function figureUrl(name: string): string {
   return `${API_BASE}/figure/${encodeURIComponent(name)}`;
 }

@@ -13,7 +13,10 @@
  * name must match NAME before it is ever put in a URL.
  */
 
-const PLACEHOLDER = /<image\s*-\s*([A-Za-z0-9_-]+)\s*>/g;
+// Figures and tables share one pass, so their order in the reply is kept.
+// A table id is `t-` and 12 hex characters (core/tables.py), nothing else.
+const PLACEHOLDER = /<(image|table)\s*-\s*([A-Za-z0-9_-]+)\s*>/g;
+const TABLE_ID = /^t-[0-9a-f]{12}$/;
 
 /**
  * region-year-figure, or run-region-year-figure for a raster the run itself
@@ -23,23 +26,25 @@ const NAME = /^(run-)?[a-z]+-\d{4}-[a-z0-9][a-z0-9_]{0,63}$/;
 
 export type ReplyPart =
   | { kind: "text"; text: string }
-  | { kind: "figure"; name: string };
+  | { kind: "figure"; name: string }
+  | { kind: "table"; id: string };
 
 export function splitFigures(text: string): ReplyPart[] {
   const parts: ReplyPart[] = [];
   let last = 0;
   for (const match of text.matchAll(PLACEHOLDER)) {
-    const name = match[1].toLowerCase();
+    const kind = match[1];
+    const name = match[2].toLowerCase();
     // A malformed name stays in the text, escaped, where the reader can see
     // it -- dropping it would hide that Argus tried to show something.
-    if (!NAME.test(name)) continue;
+    if (kind === "image" ? !NAME.test(name) : !TABLE_ID.test(name)) continue;
     const start = match.index ?? 0;
     if (start > last) parts.push({ kind: "text", text: text.slice(last, start) });
-    parts.push({ kind: "figure", name });
+    parts.push(kind === "image" ? { kind: "figure", name } : { kind: "table", id: name });
     last = start + match[0].length;
   }
   if (last < text.length) parts.push({ kind: "text", text: text.slice(last) });
-  return parts.filter((p) => p.kind === "figure" || p.text.trim());
+  return parts.filter((p) => p.kind !== "text" || p.text.trim());
 }
 
 /**

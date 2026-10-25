@@ -11,13 +11,14 @@ import { useState } from "react";
 
 import { figureUrl } from "../api/client";
 import { figureLabel } from "../lib/figures";
+import "../styles/rich.css";
 
 export function FigureImage({ name }: { name: string }) {
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
   const label = figureLabel(name);
 
   return (
-    <figure className={`fig fig--${state}`}>
+    <figure className={`fig rich fig--${state}`}>
       {state !== "missing" && (
         <img
           src={figureUrl(name)}
