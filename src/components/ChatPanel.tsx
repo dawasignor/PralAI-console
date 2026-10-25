@@ -20,6 +20,7 @@ import { splitFigures } from "../lib/figures";
 import { renderMarkdown } from "../lib/markdown";
 import { Composer } from "./Composer";
 import { FigureImage } from "./FigureImage";
+import { TableBlock } from "./TableBlock";
 import { NextStepChip } from "./NextStepChip";
 import { RunClock } from "./RunClock";
 
@@ -128,6 +129,8 @@ function Message({ message }: { message: ChatMessage }) {
           (part, i) =>
             part.kind === "figure" ? (
               <FigureImage key={`fig-${i}-${part.name}`} name={part.name} />
+            ) : part.kind === "table" ? (
+              <TableBlock key={`tab-${i}-${part.id}`} id={part.id} />
             ) : (
               <div
                 key={`txt-${i}`}
