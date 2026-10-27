@@ -31,7 +31,7 @@
   --norwood: #a371f7;
   --monty: #3fb950;
   --entro: #d29922;
-  --citadel: #ff7b72;
+  --chanakya: #ff7b72;
 
   --radius: 10px;
   --gap: 12px;
@@ -838,10 +838,9 @@ button {
   transition: color 400ms ease;
 }
 
-/* Past the slow threshold, then past the failure one. The colour is the whole
-   message. */
+/* Past the slow threshold. The colour is the whole message; there is no
+   failure colour, because there is no deadline. */
 .clock--warn  { color: var(--warn); }
-.clock--error { color: var(--error); }
 
 /* --- suggested next step ------------------------------------------------ */
 /* An offer, not a queued action. It sits after the answer, is inert until
@@ -885,6 +884,15 @@ button {
   flex: 1 1 100%;
   color: var(--text-dim);
   line-height: 1.45;
+}
+
+.suggest__workflow {
+  font-size: 11px;
+  color: var(--monty);
+}
+
+.suggest__workflow code {
+  font-family: var(--mono);
 }
 
 /* --- agent state: the dot says it, not a word --------------------------- */
@@ -981,7 +989,7 @@ button {
 .graph__node--orchestrator circle { fill: var(--argos); stroke: var(--argos); }
 .graph__node--agent circle        { fill: var(--accent); stroke: var(--accent); }
 .graph__node--workflow circle     { fill: var(--monty); stroke: var(--monty); }
-.graph__node--flow circle         { fill: var(--citadel); stroke: var(--citadel); }
+.graph__node--flow circle         { fill: var(--chanakya); stroke: var(--chanakya); }
 
 /* Hollow: the procedure exists, the evidence note does not. */
 .graph__node--stub circle {
@@ -993,6 +1001,118 @@ button {
 .graph__node--dim text   { opacity: 0.22; }
 
 .graph__node:hover circle { stroke: var(--text); stroke-width: 2.5; }
+
+/* --- the thesis path ------------------------------------------------------ */
+/* Three states, one colour each (user decision, 2026-10-14): green done,
+   yellow glowing outline next, red outline on black not yet. The glow is
+   the only motion, so the eye lands on the step Argos recommends. */
+.tpath {
+  --path-done: var(--ok);
+  --path-next: #f5c518;
+  --path-todo: var(--error);
+  --path-fill: #000;
+}
+
+.tpath__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.tpath__edge {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.2;
+}
+
+.tpath__edge--done { stroke: rgba(63, 185, 80, 0.55); }
+
+.tpath__node circle {
+  stroke-width: 2;
+  transition: fill 200ms ease, stroke 200ms ease;
+}
+
+.tpath__node--done circle { fill: var(--path-done); stroke: var(--path-done); }
+.tpath__node--todo circle { fill: var(--path-fill); stroke: var(--path-todo); }
+
+.tpath__node--next circle {
+  fill: var(--path-fill);
+  stroke: var(--path-next);
+  stroke-width: 2.5;
+  animation: tpath-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes tpath-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px var(--path-next)); }
+  50%      { filter: drop-shadow(0 0 7px var(--path-next)); }
+}
+
+.tpath__tick {
+  fill: none;
+  stroke: #0d1117;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tpath__label {
+  fill: var(--text-dim);
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.tpath__node--next .tpath__label { fill: var(--path-next); font-weight: 600; }
+.tpath__node--done .tpath__label { fill: var(--text); }
+
+.tpath__output {
+  fill: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  text-anchor: middle;
+}
+
+.tpath__legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.tpath__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tpath__key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid;
+}
+
+.tpath__key--done { background: var(--path-done); border-color: var(--path-done); }
+.tpath__key--next { background: var(--path-fill); border-color: var(--path-next);
+                    box-shadow: 0 0 4px var(--path-next); }
+.tpath__key--todo { background: var(--path-fill); border-color: var(--path-todo); }
+
+.tpath__next {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.tpath__next strong { color: var(--path-next); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tpath__node--next circle {
+    animation: none;
+    filter: drop-shadow(0 0 5px var(--path-next));
+  }
+}
 
 /* --- "Check inputs" popup ----------------------------------------------- */
 /* Opens upward out of the composer bar, the same way the persona picker does,
@@ -1092,4 +1212,48 @@ button {
   color: var(--text-dim);
   font-size: 11.5px;
   line-height: 1.5;
+}
+
+/* --- Figures inside an answer --------------------------------------------
+   `<image - region-year-figure>` in a reply becomes one of these. Each loads
+   on its own, so the box holds its place while the PNG arrives.
+   -------------------------------------------------------------------------- */
+
+.fig {
+  margin: 10px 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  white-space: normal;
+}
+
+.fig img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.fig--loading img {
+  /* Keep the element in the DOM so the request runs, but hidden until done. */
+  height: 0;
+}
+
+.fig__status {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.fig--missing .fig__status {
+  color: var(--warn);
+}
+
+.fig__caption {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
 }

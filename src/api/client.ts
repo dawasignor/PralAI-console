@@ -10,6 +10,7 @@ import type {
   ExecuteNodeRequest,
   ExecuteNodeResponse,
   TaskPoll,
+  ThesisStep,
   WorkflowInfo,
 } from "./types";
 
@@ -19,6 +20,20 @@ import type {
  * Override with VITE_API_BASE when pointing at a Python backend running locally.
  */
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
+
+/**
+ * Where the PNG behind `<image - name>` is served. A plain URL rather than a
+ * fetch: the <img> element loads it, so the browser runs the requests in
+ * parallel and caches them. `name` is validated in lib/figures.ts first.
+ */
+/** The data behind a `<table - t-...>` placeholder (core/tables.py). */
+export function tableUrl(id: string): string {
+  return `${API_BASE}/table/${encodeURIComponent(id)}`;
+}
+
+export function figureUrl(name: string): string {
+  return `${API_BASE}/figure/${encodeURIComponent(name)}`;
+}
 
 export async function executeNode(
   request: ExecuteNodeRequest,
@@ -105,6 +120,27 @@ export async function fetchWorkflows(): Promise<WorkflowInfo[]> {
     if (!res.ok) return [];
     const body = (await res.json()) as { workflows?: WorkflowInfo[] };
     return body.workflows ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The thesis path for this session, for the flowchart's first paint.
+ *
+ * Every finished run carries the same view as `thesisPath`; this covers the
+ * moment before the first answer and a reload. Returns `[]` rather than
+ * throwing -- the stub has no such route, and a missing flowchart must not
+ * cost the console the conversation.
+ */
+export async function fetchThesisPath(sessionId: string): Promise<ThesisStep[]> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/thesis_path?sessionId=${encodeURIComponent(sessionId)}`,
+    );
+    if (!res.ok) return [];
+    const body = (await res.json()) as { thesisPath?: ThesisStep[] };
+    return body.thesisPath ?? [];
   } catch {
     return [];
   }

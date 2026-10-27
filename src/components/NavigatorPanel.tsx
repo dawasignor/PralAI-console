@@ -1,8 +1,8 @@
 /**
  * Section 2 - the navigation panel, top right.
  *
- * V1 IS A READ-ONLY STUB. It lists the five agents and the four workflows and
- * highlights whichever is active, which is enough to follow a run. The real
+ * V1 IS A READ-ONLY STUB. It lists the five agents, highlights whichever is
+ * active, and draws the thesis path, which is enough to follow a run. The real
  * navigation - clicking a node to inspect it, pinning an AOI, jumping to a
  * workflow's docs - is the next session's work.
  *
@@ -14,14 +14,14 @@
 
 import { useState } from "react";
 
-import type { AgentSlug, SessionFacts, WorkflowId } from "../api/types";
+import type { AgentSlug, SessionFacts, ThesisStep } from "../api/types";
 import { AGENTS } from "../lib/framework";
-import { useWorkflows } from "../lib/workflows";
 import { FlowGraph } from "./FlowGraph";
+import { ThesisPath } from "./ThesisPath";
 
 interface Props {
   activeAgent: AgentSlug | null;   // who acted most recently
-  workflowsRun: WorkflowId[];      // workflows touched by the last turn
+  thesisPath: ThesisStep[];        // the thesis outputs and their status
   facts: SessionFacts | null;      // the AOI and window the backend settled
 }
 
@@ -30,9 +30,8 @@ function bboxText(bbox: [number, number, number, number]): string {
   return bbox.map((value) => value.toFixed(4)).join(", ");
 }
 
-export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
+export function NavigatorPanel({ activeAgent, thesisPath, facts }: Props) {
   const [graphOpen, setGraphOpen] = useState(false);
-  const workflows = useWorkflows();
 
   return (
     <section className="panel" aria-label="Nodes and workflows">
@@ -110,27 +109,12 @@ export function NavigatorPanel({ activeAgent, workflowsRun, facts }: Props) {
           })}
         </div>
 
+        {/* The thesis path replaced the workflow list (user decision,
+            2026-10-14): a list said what Monty can run, the flowchart says
+            how far the thesis has got and what comes next. */}
         <div className="nav__group">
-          <p className="nav__label">Workflows</p>
-          {workflows.map((workflow) => {
-            const wasRun = workflowsRun.includes(workflow.id);
-            return (
-              <div
-                key={workflow.id}
-                className={`nav__row ${wasRun ? "nav__row--active" : ""}`}
-                title={workflow.source}
-              >
-                <span
-                  className="nav__dot"
-                  style={{ color: wasRun ? "var(--ok)" : "var(--line)" }}
-                />
-                <span className="nav__name">
-                  {workflow.label} <span className="nav__role">{workflow.source}</span>
-                </span>
-                <span className="nav__state">{wasRun ? "ran" : "-"}</span>
-              </div>
-            );
-          })}
+          <p className="nav__label">Thesis path</p>
+          <ThesisPath steps={thesisPath} />
         </div>
 
         <div className="nav__group">

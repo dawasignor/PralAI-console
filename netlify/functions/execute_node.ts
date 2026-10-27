@@ -323,7 +323,7 @@ const FALLBACK: Omit<Scenario, "match"> = {
   ],
   reply:
     "I am **Argos**, the orchestrator. I route work to Norwood (Earth " +
-    "observation), Monty (data workflows), Entro (uncertainty) and Citadel " +
+    "observation), Monty (data workflows), Entro (uncertainty) and Chanakya " +
     "(planning decisions).\n\nTry asking for rainfall during an event, a " +
     "land-cover read, terrain, or the permanent-water baseline.\n\n" +
     "_V1 console - responses are stubbed._",

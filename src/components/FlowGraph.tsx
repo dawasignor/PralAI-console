@@ -4,7 +4,7 @@
  *
  * A list tells you what exists. A graph tells you what is connected to what,
  * which is the thing a reader actually wants here -- that every analysis hangs
- * off Citadel, that Monty's workflows are a different kind of node entirely,
+ * off Chanakya, that Monty's workflows are a different kind of node entirely,
  * and that Argos is the only route into any of it.
  *
  * Hand-rolled rather than a graph library. The simulation is about forty lines
@@ -73,7 +73,7 @@ function build(workflows: WorkflowInfo[]): { nodes: Node[]; edges: Edge[] } {
   FLOWS.forEach((flow, i) => {
     nodes.push({ id: flow.id, label: flow.label, kind: "flow",
                  ready: flow.ready, ...place(i, FLOWS.length, 145), vx: 0, vy: 0 });
-    edges.push({ from: "citadel", to: flow.id });
+    edges.push({ from: "chanakya", to: flow.id });
   });
 
   workflows.forEach((workflow, i) => {
@@ -224,7 +224,7 @@ export function FlowGraph() {
       className="graph"
       viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label="The agent framework: Argos, its specialists, the analyses Citadel can run and the workflows Monty can execute."
+      aria-label="The agent framework: Argos, its specialists, the analyses Chanakya can run and the workflows Monty can execute."
       onPointerMove={(event) => {
         if (!held.current) return;
         const point = at(event);

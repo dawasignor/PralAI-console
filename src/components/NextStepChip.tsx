@@ -34,6 +34,13 @@ export function NextStepChip({ step, disabled, onRun }: Props) {
       >
         {step.label}
       </button>
+      {/* Named, so the user can see this suggestion fetches data (and costs
+          a run) rather than reasoning over what the session already has. */}
+      {step.workflow && (
+        <span className="suggest__workflow" title="The data workflow this would run">
+          runs <code>{step.workflow}</code>
+        </span>
+      )}
       {step.why && <span className="suggest__why">{step.why}</span>}
     </div>
   );

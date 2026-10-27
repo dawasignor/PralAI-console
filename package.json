@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Showcase front end for the five-agent flood-analysis framework (Argos, Norwood, Monty, Entro, Citadel).",
+  "description": "Showcase front end for Sangam, the five-agent flood-analysis framework (Argos, Norwood, Monty, Entro, Chanakya).",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

@@ -16,8 +16,11 @@ import type {
 } from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
 import { agentInfo } from "../lib/framework";
+import { splitFigures } from "../lib/figures";
 import { renderMarkdown } from "../lib/markdown";
 import { Composer } from "./Composer";
+import { FigureImage } from "./FigureImage";
+import { TableBlock } from "./TableBlock";
 import { NextStepChip } from "./NextStepChip";
 import { RunClock } from "./RunClock";
 
@@ -117,12 +120,25 @@ function Message({ message }: { message: ChatMessage }) {
         .join(" ")}
     >
       <span className="msg__who">{who}</span>
-      {/* Safe: renderMarkdown escapes every angle bracket before a single
-          rule runs, so nothing the model writes can introduce markup. */}
-      <div
-        className="msg__body"
-        dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
-      />
+      {/* Figure placeholders are split out of the raw text first; every text
+          part still goes through renderMarkdown, which escapes every angle
+          bracket before a single rule runs, so nothing the model writes can
+          introduce markup. A user's message is never scanned for figures. */}
+      <div className="msg__body">
+        {(isUser ? [{ kind: "text" as const, text: message.text }] : splitFigures(message.text)).map(
+          (part, i) =>
+            part.kind === "figure" ? (
+              <FigureImage key={`fig-${i}-${part.name}`} name={part.name} />
+            ) : part.kind === "table" ? (
+              <TableBlock key={`tab-${i}-${part.id}`} id={part.id} />
+            ) : (
+              <div
+                key={`txt-${i}`}
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(part.text) }}
+              />
+            ),
+        )}
+      </div>
     </article>
   );
 }

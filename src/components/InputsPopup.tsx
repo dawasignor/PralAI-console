@@ -14,7 +14,7 @@
  * TODO(session): wire the lower two sections to the backend.
  *   - `session.sources` on the execute_node response: the numbered input
  *     sources actually drawn on this session (the registry in the vault's
- *     `Citadel input sources`, 1-22), each with its provider and vintage.
+ *     `Citadel input sources` (Chanakya's), 1-22), each with its provider and vintage.
  *   - The citation keys each answer used, from the flow's sources note, so a
  *     claim in the chat can be traced to the reference behind it.
  * Until then this lists what a run *would* draw on, clearly labelled, rather
