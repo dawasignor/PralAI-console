@@ -30,6 +30,9 @@ const W = 340;
 const ROW_H = 84;
 const TOP = 22;
 const R = 10;
+/** More nodes than this in one depth row and their labels collide in 340
+ *  px; the row wraps onto further lines instead. */
+const MAX_PER_LINE = 4;
 
 const STATUS_TEXT: Record<ThesisStep["status"], string> = {
   done: "done",
@@ -66,14 +69,28 @@ function layout(steps: ThesisStep[]): { nodes: Placed[]; height: number } {
     rows.set(d, [...(rows.get(d) ?? []), s]);
   });
 
+  // A crowded depth row is split into lines of at most MAX_PER_LINE, spread
+  // evenly; every later row moves down by the extra lines.
   const nodes: Placed[] = [];
-  rows.forEach((row, d) => {
-    row.forEach((s, i) => {
-      nodes.push({ ...s, x: ((i + 0.5) * W) / row.length, y: TOP + d * ROW_H });
+  let line = 0;
+  Array.from(rows.keys())
+    .sort((a, b) => a - b)
+    .forEach((d) => {
+      const row = rows.get(d) ?? [];
+      const lines = Math.ceil(row.length / MAX_PER_LINE);
+      const per = Math.ceil(row.length / lines);
+      row.forEach((s, i) => {
+        const l = Math.floor(i / per);
+        const count = Math.min(per, row.length - l * per);
+        nodes.push({
+          ...s,
+          x: (((i % per) + 0.5) * W) / count,
+          y: TOP + (line + l) * ROW_H,
+        });
+      });
+      line += lines;
     });
-  });
-  const deepest = Math.max(0, ...Array.from(rows.keys()));
-  return { nodes, height: TOP + deepest * ROW_H + 46 };
+  return { nodes, height: TOP + (line - 1) * ROW_H + 46 };
 }
 
 export function ThesisPath({ steps }: Props) {
