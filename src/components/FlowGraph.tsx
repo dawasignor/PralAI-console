@@ -1,35 +1,34 @@
 /**
- * The framework as a graph: Argos, its specialists, and the analyses it can
- * reach.
+ * Tools and workflows: Argos, its specialists, the workflows each owns and
+ * the tools Monty runs (user decision 2026-11-02).
  *
- * A list tells you what exists. A graph tells you what is connected to what,
- * which is the thing a reader actually wants here -- that every analysis hangs
- * off Chanakya, that Monty's workflows are a different kind of node entirely,
- * and that Argos is the only route into any of it.
+ * Norwood owns every thesis workflow but Modules 9 and 10, which are
+ * Chanakya's; both come from the thesis path the backend serves, named, never
+ * numbered. Monty's tools come from the registry, switched-off ones left out.
+ * Clicking a node shows its one plain line (core/one_liners.py).
  *
  * Hand-rolled rather than a graph library. The simulation is about forty lines
  * -- repulsion between every pair, a spring along every edge, a pull toward the
  * centre -- and a dependency for that would be larger than the thing it
  * replaces, in a repo that keeps its dependency list short on purpose.
  *
- * TODO(session): complete workflow till here. Clicking a node does nothing on
- * purpose -- selecting one should eventually open what it is, its inputs and
- * its last output, and that is the next piece of work, not a missing handler.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { WorkflowInfo } from "../api/types";
-import { AGENTS, FLOWS } from "../lib/framework";
+import type { ThesisStep, WorkflowInfo } from "../api/types";
+import { AGENTS } from "../lib/framework";
 import { useWorkflows } from "../lib/workflows";
 
-type Kind = "orchestrator" | "agent" | "flow" | "workflow";
+type Kind = "orchestrator" | "agent" | "workflow" | "tool";
 
 interface Node {
   id: string;
   label: string;
   kind: Kind;
   ready: boolean;
+  summary: string;
+  owner?: string;
   x: number;
   y: number;
   vx: number;
@@ -43,13 +42,13 @@ interface Edge {
 
 /** Radius by kind, so importance reads before any label does. */
 const SIZE: Record<Kind, number> = {
-  orchestrator: 13, agent: 9, flow: 5.5, workflow: 5.5,
+  orchestrator: 13, agent: 9, workflow: 6, tool: 5,
 };
 
 const W = 460;
 const H = 340;
 
-function build(workflows: WorkflowInfo[]): { nodes: Node[]; edges: Edge[] } {
+function build(tools: WorkflowInfo[], steps: ThesisStep[]): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
@@ -61,26 +60,32 @@ function build(workflows: WorkflowInfo[]): { nodes: Node[]; edges: Edge[] } {
   });
 
   nodes.push({ id: "argos", label: "Argos", kind: "orchestrator", ready: true,
+               summary: "Routes each request to the right specialist and writes the answer.",
                x: W / 2, y: H / 2, vx: 0, vy: 0 });
 
   const specialists = AGENTS.filter((a) => a.slug !== "argos");
   specialists.forEach((agent, i) => {
     nodes.push({ id: agent.slug, label: agent.name, kind: "agent", ready: true,
-                 ...place(i, specialists.length, 78), vx: 0, vy: 0 });
+                 summary: agent.role, ...place(i, specialists.length, 78), vx: 0, vy: 0 });
     edges.push({ from: "argos", to: agent.slug });
   });
 
-  FLOWS.forEach((flow, i) => {
-    nodes.push({ id: flow.id, label: flow.label, kind: "flow",
-                 ready: flow.ready, ...place(i, FLOWS.length, 145), vx: 0, vy: 0 });
-    edges.push({ from: "chanakya", to: flow.id });
+  // The workflows: Norwood's and Chanakya's, by name.
+  steps.forEach((step, i) => {
+    const id = `step:${step.id}`;
+    nodes.push({ id, label: step.label, kind: "workflow", ready: true, owner: step.owner,
+                 summary: step.summary || step.why,
+                 ...place(i, steps.length, 145), vx: 0, vy: 0 });
+    edges.push({ from: step.owner === "chanakya" ? "chanakya" : "norwood", to: id });
   });
 
-  workflows.forEach((workflow, i) => {
-    nodes.push({ id: workflow.id, label: workflow.label, kind: "workflow",
-                 ready: true, ...place(i + 0.5, workflows.length, 118),
-                 vx: 0, vy: 0 });
-    edges.push({ from: "monty", to: workflow.id });
+  // The tools Monty runs; a switched-off one is not shown.
+  const live = tools.filter((t) => t.available !== false);
+  live.forEach((tool, i) => {
+    nodes.push({ id: `tool:${tool.id}`, label: tool.label, kind: "tool", ready: true,
+                 summary: tool.summary || tool.description,
+                 ...place(i + 0.5, live.length, 118), vx: 0, vy: 0 });
+    edges.push({ from: "monty", to: `tool:${tool.id}` });
   });
 
   return { nodes, edges };
@@ -146,15 +151,18 @@ function step(nodes: Node[], edges: Edge[], held: string | null) {
   }
 }
 
-export function FlowGraph() {
+export function FlowGraph({ steps }: { steps: ThesisStep[] }) {
   const workflows = useWorkflows();
-  // Rebuilt when the registry lands, which is normally one frame after the
-  // popup opens. Keyed on the ids rather than the array, so a refetch that
-  // returns the same workflows does not restart a settled layout.
-  const initial = useMemo(() => build(workflows),
-                          [workflows.map((w) => w.id).join(",")]);
+  // Rebuilt when the registry or the path lands. Keyed on the ids rather than
+  // the arrays, so a refetch that returns the same lists does not restart a
+  // settled layout.
+  const initial = useMemo(() => build(workflows, steps),
+                          [workflows.map((w) => w.id).join(","),
+                           steps.map((s) => `${s.id}:${s.owner}`).join(",")]);
   const [nodes, setNodes] = useState<Node[]>(initial.nodes);
   const [hover, setHover] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const down = useRef<{ x: number; y: number } | null>(null);
   const edges = initial.edges;
 
   const held = useRef<string | null>(null);
@@ -217,14 +225,16 @@ export function FlowGraph() {
   }
 
   const position = new Map(nodes.map((n) => [n.id, n]));
+  const chosen = picked ? position.get(picked) : undefined;
 
   return (
+    <>
     <svg
       ref={svg}
       className="graph"
       viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label="The agent framework: Argos, its specialists, the analyses Chanakya can run and the workflows Monty can execute."
+      aria-label="Tools and workflows: Argos, its specialists, the workflows Norwood and Chanakya own and the tools Monty runs."
       onPointerMove={(event) => {
         if (!held.current) return;
         const point = at(event);
@@ -262,20 +272,30 @@ export function FlowGraph() {
           <g
             key={node.id}
             className={`graph__node graph__node--${node.kind}
-              ${node.ready ? "" : "graph__node--stub"}
+              ${node.owner === "chanakya" ? "graph__node--chanakya" : ""}
+              ${picked === node.id ? "graph__node--picked" : ""}
               ${dim ? "graph__node--dim" : ""}`}
             onPointerEnter={() => setHover(node.id)}
             onPointerDown={(event) => {
               held.current = node.id;
+              down.current = { x: event.clientX, y: event.clientY };
               (event.target as Element).setPointerCapture?.(event.pointerId);
+            }}
+            onPointerUp={(event) => {
+              // A click, not a drag: show what the node does.
+              const start = down.current;
+              if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) {
+                setPicked((was) => (was === node.id ? null : node.id));
+              }
+              down.current = null;
             }}
           >
             <circle cx={node.x} cy={node.y} r={SIZE[node.kind]} />
             {/* Labels only for the things that are always worth naming, and
                 for whatever is hovered. Eleven flow labels at once is a wall
                 of text, not a graph. */}
-            {(node.kind !== "flow" && node.kind !== "workflow")
-              || hover === node.id ? (
+            {node.kind === "orchestrator" || node.kind === "agent"
+              || hover === node.id || picked === node.id ? (
               <text x={node.x} y={node.y + SIZE[node.kind] + 11}>
                 {node.label}
               </text>
@@ -284,5 +304,16 @@ export function FlowGraph() {
         );
       })}
     </svg>
+    <p className="graph__detail" aria-live="polite">
+      {chosen ? (
+        <>
+          <strong>{chosen.label}</strong>
+          {chosen.summary ? ` -- ${chosen.summary}` : ""}
+        </>
+      ) : (
+        "Click a node to see what it does."
+      )}
+    </p>
+    </>
   );
 }

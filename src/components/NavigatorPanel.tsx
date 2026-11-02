@@ -34,10 +34,10 @@ export function NavigatorPanel({ activeAgent, thesisPath, facts }: Props) {
   const [graphOpen, setGraphOpen] = useState(false);
 
   return (
-    <section className="panel" aria-label="Nodes and workflows">
+    <section className="panel" aria-label="Agents, tools and workflows">
       <header className="panel__head">
-        <h2 className="panel__title">Nodes and workflows</h2>
-        <span className="panel__note">v1 - read only</span>
+        <h2 className="panel__title">Agents, tools and workflows</h2>
+        <span className="panel__note">read only</span>
       </header>
 
       <div className="panel__scroll">
@@ -127,21 +127,15 @@ export function NavigatorPanel({ activeAgent, thesisPath, facts }: Props) {
             <span className={`graph__caret ${graphOpen ? "graph__caret--open" : ""}`}>
               {graphOpen ? "▾" : "▸"}
             </span>
-            Flow graph
+            Tools and workflows
             <span className="graph__hint">
-              {graphOpen ? "drag a node, hover to trace" : "expand"}
+              {graphOpen ? "click a node, drag to move" : "expand"}
             </span>
           </button>
 
           {graphOpen && (
             <div className="graph__frame">
-              <FlowGraph />
-              <p className="todo">
-                TODO: complete workflow till here. Clicking a node does nothing
-                yet -- selecting one should open what it is, its inputs and its
-                last output. A hollow node is a flow whose evidence note is not
-                written, so it answers with a refusal rather than an analysis.
-              </p>
+              <FlowGraph steps={thesisPath} />
             </div>
           )}
         </div>

@@ -988,14 +988,23 @@ button {
 
 .graph__node--orchestrator circle { fill: var(--argos); stroke: var(--argos); }
 .graph__node--agent circle        { fill: var(--accent); stroke: var(--accent); }
-.graph__node--workflow circle     { fill: var(--monty); stroke: var(--monty); }
-.graph__node--flow circle         { fill: var(--chanakya); stroke: var(--chanakya); }
+/* Tools take Monty's colour, workflows their owner's (Norwood, or Chanakya
+   for Modules 9 and 10). */
+.graph__node--tool circle         { fill: var(--monty); stroke: var(--monty); }
+.graph__node--workflow circle     { fill: var(--norwood); stroke: var(--norwood); }
+.graph__node--chanakya circle     { fill: var(--chanakya); stroke: var(--chanakya); }
+.graph__node--picked circle       { stroke: var(--text); stroke-width: 2.5; }
 
-/* Hollow: the procedure exists, the evidence note does not. */
-.graph__node--stub circle {
-  fill: none;
-  stroke-dasharray: 2.5 2;
+/* The one plain line of the clicked node. */
+.graph__detail {
+  margin: 0;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.45;
 }
+.graph__detail strong { color: var(--text); }
 
 .graph__node--dim circle { opacity: 0.22; }
 .graph__node--dim text   { opacity: 0.22; }
@@ -1213,6 +1222,34 @@ button {
   font-size: 11.5px;
   line-height: 1.5;
 }
+
+/* Every data input a session can draw on: grey until fetched, then green. */
+.inputs__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 4px 0 6px;
+}
+
+.inputs__chip {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.inputs__chip:hover { color: var(--text); border-color: var(--text-faint); }
+
+.inputs__chip--got {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 20%, transparent);
+  color: var(--text);
+}
+
+.inputs__chip--picked { outline: 1px solid var(--text-faint); outline-offset: 1px; }
 
 /* --- Figures inside an answer --------------------------------------------
    `<image - region-year-figure>` in a reply becomes one of these. Each loads

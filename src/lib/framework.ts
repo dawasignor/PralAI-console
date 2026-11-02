@@ -1,5 +1,5 @@
 /**
- * Who the agents are, and what analyses Chanakya can run.
+ * Who the agents are.
  *
  * The console's mirror of the backend: agents match AgentSlug in core/state.py.
  *
@@ -28,42 +28,10 @@ export const AGENTS: AgentInfo[] = [
 /**
  * Workflows are NOT here. They are served by the backend registry and read
  * through `lib/workflows.ts` -- the copy that used to live in this file went
- * stale three times. Agents and flows are still hardcoded below; see the TODO
- * on FLOWS.
+ * stale three times. The workflows Norwood and Chanakya own come with the
+ * thesis path (`owner`, `summary`); only the agents are listed here.
  */
 
 /** Look-ups by slug, so components do not each write their own find(). */
 export const agentInfo = (slug: AgentSlug): AgentInfo =>
   AGENTS.find((a) => a.slug === slug) ?? AGENTS[0];
-
-/**
- * Chanakya's analysis flows, as Argos sees them in its routing menu.
- *
- * `ready` means the flow has a knowledge note and a sources note behind it and
- * can produce a sourced answer. `stub` means the procedure is written and the
- * evidence is not -- selecting one gets an honest refusal, which is the
- * designed behaviour, not a bug to hide.
- *
- * TODO(session): fetch from the backend, same as WORKFLOWS above. These mirror
- * `agents/citadel/workflows/*.md` (the backend still calls Chanakya
- * `citadel`; api/console_server.py renames it) and go stale the moment a flow is added.
- */
-export interface FlowInfo {
-  id: string;
-  label: string;
-  nexus: "water" | "food" | "energy" | "other";
-  ready: boolean;
-}
-
-export const FLOWS: FlowInfo[] = [
-  { id: "sewage_infection_risk", label: "Sewage and infection risk", nexus: "water", ready: true },
-  { id: "drinking_water_scarcity", label: "Drinking water scarcity", nexus: "water", ready: false },
-  { id: "critical_infrastructure_and_waterlogging", label: "Critical infrastructure", nexus: "water", ready: false },
-  { id: "primary_cooking_fuel_disruption", label: "Cooking fuel disruption", nexus: "food", ready: false },
-  { id: "food_aid_and_relief_estimation", label: "Food aid and relief", nexus: "food", ready: false },
-  { id: "power_outage_and_disruption_risk", label: "Power outage", nexus: "energy", ready: false },
-  { id: "electric_shock_hazard", label: "Electric shock hazard", nexus: "energy", ready: false },
-  { id: "rockfall_treefall_and_landslide_risk", label: "Landslide and rockfall", nexus: "other", ready: false },
-  { id: "cultural_heritage_and_home_flooding_risk", label: "Heritage and home flooding", nexus: "other", ready: false },
-  { id: "river_and_ocean_hazard", label: "River and ocean hazard", nexus: "other", ready: false },
-];

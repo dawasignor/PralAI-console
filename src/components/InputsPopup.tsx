@@ -2,29 +2,21 @@
  * "Check inputs" - everything the answers in this session were built on.
  *
  * The console shows what the agents concluded. This shows what they were
- * standing on when they concluded it, which is the question a reader actually
- * has to be able to answer before quoting any of it: which area, which event
- * window, from which register, with which settings, and from which data.
+ * standing on when they concluded it: which area, which event window, with
+ * which settings, and from which data.
  *
- * **Partly stubbed, and marked where it is.** The session constants and the
- * run settings are live -- they come back on every turn. The data and
- * knowledge sources are not: the backend knows which citation keys an answer
- * rested on and does not send them yet.
- *
- * TODO(session): wire the lower two sections to the backend.
- *   - `session.sources` on the execute_node response: the numbered input
- *     sources actually drawn on this session (the registry in the vault's
- *     `Citadel input sources` (Chanakya's), 1-22), each with its provider and vintage.
- *   - The citation keys each answer used, from the flow's sources note, so a
- *     claim in the chat can be traced to the reference behind it.
- * Until then this lists what a run *would* draw on, clearly labelled, rather
- * than inventing a provenance trail that was never recorded.
+ * **Data drawn on** lists EVERY data input a session can use (the registry's
+ * `dataInput` tools, user decision 2026-11-02), each as a button: grey until
+ * it is fetched for this AOI and window, green once it is. Clicking one shows
+ * its one plain line. "Fetched" is the session record's own list
+ * (`session.fetched`) plus whatever this turn ran, so a fetch shows green the
+ * moment its answer arrives.
  */
 
 import { useEffect, useRef, useState } from "react";
 
 import type { PersonaId, SessionFacts, WorkflowId } from "../api/types";
-import { useWorkflows, workflowInfo } from "../lib/workflows";
+import { useWorkflows } from "../lib/workflows";
 import { personaInfo } from "../lib/personas";
 
 interface Props {
@@ -55,6 +47,7 @@ function Row({ label, value, source }:
 export function InputsPopup({ facts, workflowsRun, persona,
                               verifiedSourcesOnly }: Props) {
   const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const workflows = useWorkflows();
 
@@ -76,7 +69,12 @@ export function InputsPopup({ facts, workflowsRun, persona,
     };
   }, [open]);
 
-  const ran = workflows.filter((w) => workflowsRun.includes(w.id));
+  const inputs = workflows
+    .filter((w) => w.dataInput && w.available !== false)
+    .sort((a, b) => (a.inputOrder ?? 99) - (b.inputOrder ?? 99));
+  const fetched = new Set<string>([...(facts?.fetched ?? []), ...workflowsRun]);
+  const chosen = inputs.find((w) => w.id === picked);
+  const count = inputs.filter((w) => fetched.has(w.id)).length;
 
   return (
     <div className="inputs" ref={rootRef}>
@@ -127,34 +125,33 @@ export function InputsPopup({ facts, workflowsRun, persona,
 
           <p className="inputs__heading">
             Data drawn on
-            <span className="inputs__tag">this session</span>
+            <span className="inputs__tag">
+              this session · {count} of {inputs.length}
+            </span>
           </p>
-          {ran.length ? (
-            ran.map((w) => (
-              <Row key={w.id} label={workflowInfo(w.id)?.label ?? w.id}
-                   value={w.source} />
-            ))
-          ) : (
-            <p className="inputs__empty">
-              No data workflow has run yet this session.
-            </p>
-          )}
-
-          <p className="inputs__heading">
-            Knowledge behind the answers
-            <span className="inputs__tag inputs__tag--stub">stub</span>
-          </p>
+          <div className="inputs__chips">
+            {inputs.map((w) => {
+              const got = fetched.has(w.id);
+              return (
+                <button
+                  key={w.id}
+                  type="button"
+                  className={`inputs__chip ${got ? "inputs__chip--got" : ""}
+                    ${picked === w.id ? "inputs__chip--picked" : ""}`}
+                  aria-pressed={picked === w.id}
+                  title={got ? "Fetched for this area and window" : "Not fetched yet"}
+                  onClick={() => setPicked((was) => (was === w.id ? null : w.id))}
+                >
+                  {w.label}
+                </button>
+              );
+            })}
+          </div>
           <p className="inputs__empty">
-            The backend knows which citation keys each answer rested on and does
-            not send them yet, so listing any here would be inventing a
-            provenance trail that was never recorded. Until it does, the
-            references at the end of each answer are the reliable record.
-          </p>
-          <p className="todo">
-            TODO: wire this to the session&apos;s source list -- the numbered
-            input sources actually drawn on (the registry in the vault, 1-22)
-            with provider and vintage, and the citation keys each answer used,
-            so a claim in the chat can be traced to the reference behind it.
+            {chosen
+              ? `${chosen.label}: ${chosen.summary || chosen.description}` +
+                (chosen.source ? ` (${chosen.source})` : "")
+              : "Green: fetched for this area and window. Click one to see what it is."}
           </p>
         </div>
       )}

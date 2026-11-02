@@ -48,11 +48,14 @@ export function splitFigures(text: string): ReplyPart[] {
 }
 
 /**
- * `kelani-2025-ndvi_class` -> "kelani-2025 · ndvi_class", and
- * `run-kelani-2025-bui` -> "kelani-2025 · bui · this run", for the caption.
+ * `run-kelani-2025-ndvi_class` -> "Ndvi class · this run", for the caption.
+ * The internal figure id is never shown (user bug, 2026-11-02): only a
+ * readable name, and whether it is this run's.
  */
 export function figureLabel(name: string): string {
   const match = /^(run-)?([a-z]+-\d{4})-(.+)$/.exec(name);
-  if (!match) return name;
-  return `${match[2]} · ${match[3]}${match[1] ? " · this run" : ""}`;
+  if (!match) return "Figure";
+  const words = match[3].replace(/_/g, " ").trim();
+  const readable = words.charAt(0).toUpperCase() + words.slice(1);
+  return `${readable}${match[1] ? " · this run" : ""}`;
 }

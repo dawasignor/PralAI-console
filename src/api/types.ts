@@ -31,6 +31,14 @@ export interface WorkflowInfo {
   source: string;       // where the data actually comes from
   description: string;  // the one-liner the routing prompt sees
   params: string[];     // parameter names, the only truth about the signature
+  /** False for a tool that is registered but switched off. */
+  available?: boolean;
+  /** One plain line on what it does, shown when its node is clicked. */
+  summary?: string;
+  /** A data input: listed in "Check inputs", green once fetched. */
+  dataInput?: boolean;
+  /** Where a data input sits in "Check inputs": the order of the analysis. */
+  inputOrder?: number;
 }
 
 /** How a step went. Drives the colour of a log line and a node's badge. */
@@ -134,6 +142,8 @@ export interface SessionFacts {
   turns: number;
   /** What the agents have established so far, rewritten each turn by Argos. */
   digest: string | null;
+  /** Data inputs fetched for this AOI and window, by tool name. */
+  fetched?: string[];
 }
 
 /**
@@ -243,6 +253,10 @@ export interface ThesisStep {
   /** What the console would send to run it. */
   prompt: string;
   why: string;
+  /** One plain line on what the workflow does, shown on click. */
+  summary?: string;
+  /** The agent it hangs off in the graph: Chanakya for Modules 9 and 10. */
+  owner?: "norwood" | "chanakya";
 }
 
 /** An analysis Argos suggests running next. */
