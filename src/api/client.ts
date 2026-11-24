@@ -9,6 +9,7 @@
 import type {
   ExecuteNodeRequest,
   ExecuteNodeResponse,
+  OpenSessionResponse,
   TaskPoll,
   ThesisStep,
   WorkflowInfo,
@@ -122,6 +123,28 @@ export async function fetchWorkflows(): Promise<WorkflowInfo[]> {
     return body.workflows ?? [];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Open the one session this console works in (the backend's pinned session),
+ * with everything said in it so far.
+ *
+ * Returns null when there is no such backend -- the Netlify stub -- and the
+ * console then runs a throwaway session as before.
+ */
+export async function openSession(): Promise<OpenSessionResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE}/session/open`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as OpenSessionResponse;
+    return body.sessionId ? body : null;
+  } catch {
+    return null;
   }
 }
 

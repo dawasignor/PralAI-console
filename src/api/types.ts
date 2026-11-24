@@ -90,7 +90,7 @@ export interface LogEvent {
  * The persona copy lives in src/lib/personas.ts; this is only the identifier
  * that travels on the wire.
  */
-export type PersonaId = "ck_bot" | "chanakya" | "norwood";
+export type PersonaId = "flood_bot" | "chanakya" | "norwood";
 
 /** What the front end sends. */
 export interface ExecuteNodeRequest {
@@ -231,6 +231,26 @@ export interface ExecuteNodeResponse {
    * flowchart. Absent from the stub, which keeps no session.
    */
   thesisPath?: ThesisStep[] | null;
+}
+
+/** A turn as stored by the backend, replayed when the session is opened. */
+export interface StoredTurn {
+  id: string;
+  at: string;
+  task: string;
+  reply: string;
+  status: "ok" | "error" | "partial" | "unknown";
+  agent: AgentSlug;
+  events: LogEvent[];
+}
+
+/** POST /session/open: the one session this console works in. */
+export interface OpenSessionResponse {
+  sessionId: string;
+  session: SessionFacts | null;
+  thesisPath: ThesisStep[];
+  turns: StoredTurn[];
+  running: boolean;
 }
 
 /**

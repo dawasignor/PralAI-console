@@ -15,15 +15,14 @@ import type { FormEvent, KeyboardEvent } from "react";
 
 import type { PersonaId, SessionFacts, WorkflowId } from "../api/types";
 import type { ChatMessage } from "../hooks/useSession";
-import { chatTranscript } from "../lib/transcript";
-import { CopyButton } from "./CopyButton";
+import { ExportPdfButton } from "./ExportPdfButton";
 import { InputsPopup } from "./InputsPopup";
 import { PersonaPicker } from "./PersonaPicker";
 
 interface Props {
   disabled: boolean;
   onSend: (text: string) => void;
-  /** The whole conversation, for the copy button. */
+  /** The whole conversation, so the export knows whether there is one. */
   messages: ChatMessage[];
   persona: PersonaId;
   onPersonaChange: (persona: PersonaId) => void;
@@ -104,12 +103,8 @@ export function Composer({
           verifiedSourcesOnly={verifiedSourcesOnly}
         />
 
-        <CopyButton
-          getText={() => chatTranscript(messages)}
-          label="Copy chat"
-          title="Copy every exchange in this conversation"
-          emptyTitle="No exchanges yet"
-        />
+        {/* The greeting alone is not a conversation worth exporting. */}
+        <ExportPdfButton enabled={messages.some((m) => m.role === "user")} />
 
         <button
           className="composer__send"

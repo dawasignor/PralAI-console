@@ -97,7 +97,7 @@ export function ThesisPath({ steps }: Props) {
   if (!steps.length) {
     return (
       <p className="nav__empty">
-        The thesis path comes from the Sangam backend, and it has not answered.
+        The thesis path comes from the PralAI backend, and it has not answered.
         Start it to see which outputs this session has produced.
       </p>
     );
@@ -135,7 +135,10 @@ export function ThesisPath({ steps }: Props) {
         )}
 
         {nodes.map((node) => (
-          <g key={node.id} className={`tpath__node tpath__node--${node.status}`}>
+          <g
+            key={node.id}
+            className={`tpath__node tpath__node--${node.status}`}
+          >
             {/* The title is the tooltip and what a screen reader announces:
                 the colour alone carries nothing for a reader who cannot see it. */}
             <title>

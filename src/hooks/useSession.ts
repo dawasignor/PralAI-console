@@ -11,11 +11,23 @@
  *
  * A backend that answers in one hop -- the Netlify stub -- returns no taskId,
  * and step 3 is skipped.
+ *
+ * **Sessions** (user decisions 2026-11-21 and 2026-11-23). The page opens on
+ * a FRESH session -- a new id, an empty context, any AOI and window. The
+ * "Kelani basin" button opens the backend's pinned session instead and
+ * replays what was said in it; "New session" starts a fresh one again. (Likes, frozen modules and rollback were removed on
+ * 2026-11-23.) Without such a backend (the stub) the console keeps a
+ * throwaway session, as before.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { executeNode, fetchThesisPath, pollTask } from "../api/client";
+import {
+  executeNode,
+  fetchThesisPath,
+  openSession,
+  pollTask,
+} from "../api/client";
 import { isRunning as stillRunning } from "../api/types";
 import type {
   AgentSlug,
@@ -24,6 +36,7 @@ import type {
   PersonaId,
   NextStep,
   SessionFacts,
+  StoredTurn,
   TaskPoll,
   ThesisStep,
   WorkflowId,
@@ -48,6 +61,37 @@ export interface ChatMessage {
   isError?: boolean;
 }
 
+/** The pinned session's opening line, built from the constants it holds. */
+function pinnedGreeting(facts: SessionFacts | null): ChatMessage {
+  const box = facts?.bbox
+    ? ` (bbox W ${facts.bbox[0].toFixed(4)}, S ${facts.bbox[1].toFixed(4)}, ` +
+      `E ${facts.bbox[2].toFixed(4)}, N ${facts.bbox[3].toFixed(4)})`
+    : "";
+  return {
+    id: "greeting",
+    role: "agent",
+    agent: "argos",
+    text:
+      `Argos here. This console works on one session: **${facts?.aoi ?? "the pinned area"}**` +
+      `${box}, ${facts?.window ?? ""}.\n\n` +
+      "Ask for a module.",
+  };
+}
+
+/** A stored turn as the two bubbles it was on screen. */
+function turnMessages(turn: StoredTurn): ChatMessage[] {
+  return [
+    { id: `u-${turn.id}`, role: "user", text: turn.task },
+    {
+      id: `a-${turn.id}`,
+      role: "agent",
+      agent: turn.agent,
+      text: turn.reply,
+      isError: turn.status === "error",
+    },
+  ];
+}
+
 /** Shown before the first turn, so the console is never an empty box. */
 const GREETING: ChatMessage = {
   id: "greeting",
@@ -61,6 +105,11 @@ const GREETING: ChatMessage = {
 
 export function useSession() {
   const sessionId = useRef(newSessionId());
+  // True once the backend's pinned session is open; false under the stub.
+  const [pinned, setPinned] = useState(false);
+  // Sending waits for the session to open, or a first message could land in
+  // a throwaway session.
+  const opening = useRef(true);
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [events, setEvents] = useState<LogEvent[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -116,17 +165,62 @@ export function useSession() {
     };
   }, []);
 
-  // The flowchart before the first answer: every step todo, the first one
-  // glowing. A finished turn replaces it with the session's own.
-  useEffect(() => {
-    let live = true;
-    void fetchThesisPath(sessionId.current).then((path) => {
-      if (live && path.length) setThesisPath(path);
-    });
-    return () => {
-      live = false;
-    };
+  /** Everything on screen back to an empty session (user, 2026-11-23). */
+  const clearScreen = useCallback((greeting: ChatMessage) => {
+    setMessages([greeting]);
+    eventsAtTurnStart.current = [];
+    setEvents([]);
+    setFacts(null);
+    setNextStep(null);
+    setWorkflowsRun([]);
+    setThesisPath([]);
+    setElapsedMs(0);
+    setActiveAgent(null);
+    glossarySeen.current = [];
   }, []);
+
+  /**
+   * A fresh session: a new id, so the backend starts an empty record and an
+   * empty folder -- any AOI and window may be set. The page opens on one.
+   */
+  const newSession = useCallback(async () => {
+    if (busy.current) return;
+    opening.current = true;
+    sessionId.current = newSessionId();
+    setPinned(false);
+    clearScreen(GREETING);
+    const path = await fetchThesisPath(sessionId.current);
+    if (path.length) setThesisPath(path);
+    opening.current = false;
+  }, [clearScreen]);
+
+  /**
+   * The pinned Kelani basin session, with everything said in it so far. Its
+   * AOI and window stay locked. Under the stub there is none, and the
+   * current session is kept.
+   */
+  const openPinned = useCallback(async () => {
+    if (busy.current) return;
+    opening.current = true;
+    const open = await openSession();
+    if (open) {
+      sessionId.current = open.sessionId;
+      setPinned(true);
+      clearScreen(pinnedGreeting(open.session));
+      setFacts(open.session);
+      if (open.thesisPath.length) setThesisPath(open.thesisPath);
+      setMessages([pinnedGreeting(open.session), ...open.turns.flatMap(turnMessages)]);
+      eventsAtTurnStart.current = open.turns.flatMap((t) => t.events ?? []);
+      setEvents(eventsAtTurnStart.current);
+    }
+    opening.current = false;
+    return Boolean(open);
+  }, [clearScreen]);
+
+  // The page opens on a fresh session: an empty context, any experiment.
+  useEffect(() => {
+    void newSession();
+  }, [newSession]);
 
   /**
    * Append a log line that the console itself produced, rather than Argos.
@@ -183,7 +277,7 @@ export function useSession() {
    */
   const send = useCallback(async (task: string) => {
     const text = task.trim();
-    if (!text || busy.current) return;
+    if (!text || busy.current || opening.current) return;
 
     busy.current = true;
     stop.current = false;
@@ -276,6 +370,9 @@ export function useSession() {
 
   return {
     sessionId: sessionId.current,
+    pinned,
+    newSession,
+    openPinned,
     messages,
     events,
     isRunning,

@@ -8,7 +8,6 @@
  */
 
 import type { LogEvent } from "../api/types";
-import type { ChatMessage } from "../hooks/useSession";
 import { agentInfo } from "./framework";
 import { workflowInfo } from "./workflows";
 import { clock } from "./format";
@@ -18,30 +17,9 @@ function stamp(): string {
   return new Date().toISOString().replace("T", " ").slice(0, 19);
 }
 
-/**
- * The whole conversation, speaker by speaker.
- *
- * Agent messages keep the agent's name rather than a generic "assistant":
- * which specialist said a thing is the point of a multi-agent transcript.
- */
-export function chatTranscript(messages: ChatMessage[]): string {
-  if (messages.length === 0) return "";
-
-  const body = messages
-    .map((message) => {
-      const who =
-        message.role === "user"
-          ? "You"
-          : agentInfo(message.agent ?? "argos").name;
-      // A failed turn is marked, because the text of an error can read like a
-      // finding once the red border is gone.
-      const flag = message.isError ? " [error]" : "";
-      return `### ${who}${flag}\n${message.text.trim()}`;
-    })
-    .join("\n\n");
-
-  return `# Argos Console - chat transcript\n_${stamp()}_\n\n${body}\n`;
-}
+// The chat transcript that lived here went with the "Copy chat" button
+// (2026-10-14): the conversation is exported as a PDF of what is on screen,
+// figures included -- see components/ExportPdfButton.tsx.
 
 /**
  * The session log, one event per block.

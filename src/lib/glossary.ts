@@ -5,7 +5,7 @@
  * every term and abbreviation the FIRST time it appears in a session - and only
  * the first time, so a long conversation does not repeat itself.
  *
- * CK bot never reaches this table: its replies are written in plain language
+ * Flood bot never reaches this table: its replies are written in plain language
  * and are not supposed to contain jargon at all.
  *
  * Definitions are one line, active voice, and must not need a second

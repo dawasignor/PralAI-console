@@ -1,7 +1,7 @@
 # Argos Console
 
-A front end for Sangam, the five-agent flood-analysis framework in
-`E:\Claude code\langgraph-agents`. It exists to **showcase the research** - to
+A front end for [PralAI](https://github.com/dawasignor/PralAI), the five-agent
+flood-analysis framework. It exists to **showcase the research** - to
 give a reader one screen where they can ask a question, watch the orchestration
 happen, and see where it succeeded or failed.
 
@@ -73,7 +73,7 @@ picker at the bottom of the chat:
 
 | Persona | Register | Voice |
 |---|---|---|
-| `ck_bot` | plain | **Citizen Knowledge bot** - for the general public. Tone is ELI10; the language follows ASD-STE100 Simplified Technical English - short sentences, one idea each, active voice, common words. The two are separate: STE governs how simple the wording is, not how the reply sounds. The default. |
+| `flood_bot` | plain | **Flood bot** - for the general public. Tone is ELI10; the language follows ASD-STE100 Simplified Technical English - short sentences, one idea each, active voice, common words. The two are separate: STE governs how simple the wording is, not how the reply sounds. The default. |
 | `chanakya` | technical | Strategic and terse. Leads with the decision and the risk, for a planner rather than a scientist. |
 | `norwood` | technical | The Earth-observation specialist. Sensors, bands, thresholds, and the caveats an EO reader expects. |
 
@@ -81,7 +81,7 @@ Two rules hold across all three:
 
 **A persona changes voice and depth only.** It must never change which
 workflows run or what the numbers say - two personas asked the same question
-have to agree on the facts. Basic language is not less information: CK bot
+have to agree on the facts. Basic language is not less information: Flood bot
 gets its own plain-English text for each result (`plainReply` on the
 scenario), saying the same thing in smaller words. Nothing important is
 dropped to make a reply simpler.
@@ -90,7 +90,7 @@ dropped to make a reply simpler.
 is defined the first time it appears in a session, and never again. The terms
 live in [`src/lib/glossary.ts`](src/lib/glossary.ts); what has already been
 explained travels on the request as `glossarySeen`, and the reply names what
-it just defined in `glossaryAdded`. CK bot never uses the table, because its
+it just defined in `glossaryAdded`. Flood bot never uses the table, because its
 text is not supposed to contain jargon in the first place.
 
 The persona copy lives in [`src/lib/personas.ts`](src/lib/personas.ts).
@@ -126,6 +126,18 @@ loading from `GET {VITE_API_BASE}/figure/<name>`, so images arrive in parallel
 and never hold up the text. A name the backend does not have shows "Figure
 unavailable" in place. The figures live only in the backend's local
 `experiments/` folder, so the Netlify demo has none.
+
+### Sessions (since 2026-11-21; fresh by default since 2026-11-23)
+
+The console opens on a FRESH session: a new id, an empty context, any area and
+dates. The **Kelani basin** button in the chat header calls
+`POST {VITE_API_BASE}/session/open`, which returns the pinned Kelani basin
+session id, its constants, its thesis path and every answer given in it so
+far, and replays them; **New session** starts a fresh one again. (The like button, frozen modules and the
+rollback on return were removed on 2026-11-23.)
+
+Under the Netlify stub `session/open` does not exist; the console falls back
+to a throwaway session id.
 
 ---
 

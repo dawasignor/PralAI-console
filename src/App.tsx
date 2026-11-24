@@ -32,6 +32,9 @@ export default function App() {
     verifiedSourcesOnly,
     setVerifiedSourcesOnly,
     send,
+    pinned,
+    newSession,
+    openPinned,
   } = useSession();
 
   return (
@@ -49,6 +52,9 @@ export default function App() {
         onPersonaChange={setPersona}
         verifiedSourcesOnly={verifiedSourcesOnly}
         onVerifiedChange={setVerifiedSourcesOnly}
+        pinned={pinned}
+        onNewSession={() => void newSession()}
+        onOpenPinned={openPinned}
       />
 
       <div className="shell__side">

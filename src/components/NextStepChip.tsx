@@ -12,6 +12,7 @@
  */
 
 import type { NextStep } from "../api/types";
+import { workflowInfo } from "../lib/workflows";
 
 interface Props {
   step: NextStep | null;
@@ -36,9 +37,11 @@ export function NextStepChip({ step, disabled, onRun }: Props) {
       </button>
       {/* Named, so the user can see this suggestion fetches data (and costs
           a run) rather than reasoning over what the session already has. */}
+      {/* The workflow's name, not its function id: the reader is a flood
+          analyst or a mayor, not a developer (plain-language guardrail). */}
       {step.workflow && (
         <span className="suggest__workflow" title="The data workflow this would run">
-          runs <code>{step.workflow}</code>
+          runs the {workflowInfo(step.workflow).label} workflow
         </span>
       )}
       {step.why && <span className="suggest__why">{step.why}</span>}

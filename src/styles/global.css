@@ -1294,3 +1294,108 @@ button {
   font-size: 11px;
   color: var(--text-faint);
 }
+
+/* --- Export PDF: the print layout ----------------------------------------
+   "Export PDF" prints the page, and this is what the print engine lays out:
+   the conversation at full length -- nothing clipped by the scrolling pane --
+   with its figures, in the console's own colours (user decision, 2026-10-14:
+   "as displayed in UI"). The side panels, the composer and the working line
+   are controls, not the conversation, and are left out.
+   -------------------------------------------------------------------------- */
+
+@media print {
+  /* No page margin: the margin box takes no background in Chrome, so the
+     dark page would sit in a white frame. The margin is the padding of the
+     chat instead, repeated on every page by `box-decoration-break`. */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Browsers drop backgrounds when printing unless told not to; without this
+     the bubbles lose their fills and white text prints on white. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto;
+    background: var(--bg);
+  }
+
+  .shell {
+    display: block;
+    height: auto;
+    padding: 0;
+  }
+
+  .shell__side,
+  .composer,
+  .chat__working,
+  .suggest {
+    display: none !important;
+  }
+
+  .panel {
+    overflow: visible;
+    border: 0;
+  }
+
+  .panel__scroll {
+    overflow: visible;
+    max-height: none;
+    padding: 10mm 12mm;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  /* The panel header is the console's chrome, not the record; the PDF opens
+     on the conversation. */
+  .panel__head {
+    display: none;
+  }
+
+  /* A bubble may span pages -- a long answer has to -- but a figure, a table
+     row or a speaker's name is never cut across a page edge. */
+  .fig,
+  .msg__body tr,
+  .msg__who {
+    break-inside: avoid;
+  }
+
+  .msg__who {
+    break-after: avoid;
+  }
+
+  .fig img {
+    max-height: 240mm;
+    width: auto;
+    margin: 0 auto;
+  }
+}
+
+/* --- Session switch: fresh session or the pinned Kelani basin (2026-11-23) - */
+.session__btn {
+  margin-left: auto;
+  padding: 3px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.session__btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.session__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}

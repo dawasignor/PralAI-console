@@ -9,7 +9,7 @@
  *
  * Two styles:
  *
- *   plain      CK bot - Citizen Knowledge bot, for the general public. Two
+ *   plain      Flood bot - for the general public. Two
  *              separate dials here, and they are not the same thing:
  *
  *                tone      ELI10 - explain it to a ten-year-old.
@@ -46,9 +46,9 @@ export interface Persona {
 
 export const PERSONAS: Persona[] = [
   {
-    id: "ck_bot",
-    name: "CK bot",
-    tagline: "Citizen Knowledge - for the public",
+    id: "flood_bot",
+    name: "Flood bot",
+    tagline: "Plain answers - for the public",
     behaviour:
       "Explains the result the way you would to a ten-year-old, in Simplified " +
       "Technical English: short sentences, common words, one idea at a time. " +
@@ -84,7 +84,7 @@ export const PERSONAS: Persona[] = [
   },
 ];
 
-export const DEFAULT_PERSONA: PersonaId = "ck_bot";
+export const DEFAULT_PERSONA: PersonaId = "flood_bot";
 
 export const personaInfo = (id: PersonaId): Persona =>
   PERSONAS.find((p) => p.id === id) ?? PERSONAS[0];

@@ -34,7 +34,7 @@ interface Scenario {
   /** Technical register - Chanakya and Agent Norwood. */
   reply: string;
   /**
-   * Plain register - CK bot. ELI10 tone, with the language kept to ASD-STE100:
+   * Plain register - Flood bot. ELI10 tone, with the language kept to ASD-STE100:
    * short sentences, one idea each, active voice, common words, no unexplained
    * abbreviation. It says the same thing as `reply`, in smaller words - never
    * less.
@@ -328,7 +328,7 @@ const FALLBACK: Omit<Scenario, "match"> = {
     "land-cover read, terrain, or the permanent-water baseline.\n\n" +
     "_V1 console - responses are stubbed._",
   plainReply:
-    "**Hello. I am the Citizen Knowledge bot.**\n\n" +
+    "**Hello. I am Flood bot.**\n\n" +
     "I answer questions about floods. I work with a team. One member looks at " +
     "satellite photos. One member collects the data. One member checks how " +
     "sure we are. One member helps city planners decide.\n\n" +
@@ -400,7 +400,7 @@ function sourceSteps(scenario: Omit<Scenario, "match">, strict: boolean): Step[]
  *
  * Two registers, picked by `persona.style`:
  *
- *   plain      CK bot gets `scenario.plainReply` -- the same findings in an
+ *   plain      Flood bot gets `scenario.plainReply` -- the same findings in an
  *              ELI10 tone, worded to Simplified Technical English. Simpler
  *              words, never less information, and no abbreviation the reader
  *              must look up.
@@ -420,7 +420,7 @@ function composeReply(
   strict: boolean,
   seen: string[],
 ): { reply: string; glossaryAdded: string[] } {
-  const persona = personaInfo(personaId ?? "ck_bot");
+  const persona = personaInfo(personaId ?? "flood_bot");
   const plain = persona.style === "plain";
   const base = plain ? scenario.plainReply : scenario.reply;
 

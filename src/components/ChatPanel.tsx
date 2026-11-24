@@ -40,6 +40,12 @@ interface Props {
   /** Passed through to "Check inputs". */
   facts: SessionFacts | null;
   workflowsRun: WorkflowId[];
+  /** True while the pinned Kelani basin session is open. */
+  pinned?: boolean;
+  /** Start a fresh, empty session. */
+  onNewSession?: () => void;
+  /** Open the pinned Kelani basin session; resolves false when there is none. */
+  onOpenPinned?: () => Promise<boolean | undefined>;
 }
 
 export function ChatPanel({
@@ -54,6 +60,9 @@ export function ChatPanel({
   onPersonaChange,
   verifiedSourcesOnly,
   onVerifiedChange,
+  pinned = false,
+  onNewSession,
+  onOpenPinned,
 }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +75,24 @@ export function ChatPanel({
     <section className="panel" aria-label="Agent chat">
       <header className="panel__head">
         <h2 className="panel__title">Agent chat</h2>
-        <span className="panel__note">Argos - orchestrator</span>
+        <span className="panel__note">
+          {pinned ? "Kelani basin session (fixed area and dates)" : "New session"}
+        </span>
+        {pinned
+          ? onNewSession && (
+              <button type="button" className="session__btn" disabled={isRunning}
+                      title="Start an empty session: any area and dates"
+                      onClick={onNewSession}>
+                New session
+              </button>
+            )
+          : onOpenPinned && (
+              <button type="button" className="session__btn" disabled={isRunning}
+                      title="Open the Kelani basin session with everything said in it"
+                      onClick={() => void onOpenPinned()}>
+                Kelani basin
+              </button>
+            )}
       </header>
 
       <div className="panel__scroll">
